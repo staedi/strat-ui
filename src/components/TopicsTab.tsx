@@ -103,7 +103,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
         <div ref={containerRef} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {loading && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-4)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-4)', fontFamily: 'var(--font-ui)', fontSize: 13 }}>
               loading…
             </div>
           )}
@@ -124,7 +124,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
                 activeMeta={activeMeta}
                 onMetaClick={handleMetaClick}
               />
-              <div style={{ position: 'absolute', bottom: 12, left: 16, fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ position: 'absolute', bottom: 12, left: 16, fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
                 updated {new Date(data.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </div>
             </>
