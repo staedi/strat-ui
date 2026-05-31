@@ -5,5 +5,5 @@ const BASE = process.env.VITE_BASE_PATH ?? '/'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/strait-ui/',
+  base: BASE,
 })
