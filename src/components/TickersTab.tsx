@@ -448,10 +448,7 @@ function TickerDetail({
             <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.02em', fontFamily: 'var(--font-ui)' }}>
               {ticker.ticker}
             </h2>
-            <span style={{
-              fontSize: 14, color: 'var(--ink-3)', fontWeight: 400,
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isMobile ? 160 : 'none'
-            }}>
+            <span style={{ fontSize: 14, color: 'var(--ink-3)', fontWeight: 400 }}>
               {ticker.name}
             </span>
           </div>
