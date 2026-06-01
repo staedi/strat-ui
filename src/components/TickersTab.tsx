@@ -440,9 +440,9 @@ function TickerDetail({
   }, [])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'var(--font-ui)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'var(--font-ui)', flexWrap: 'wrap' }}>
       {/* Header */}
-      <div style={{ padding: '16px 24px 12px', borderBottom: '1px solid var(--ink-5)', flexShrink: 0, flexWrap: 'wrap' }}>
+      <div style={{ padding: '16px 24px 12px', borderBottom: '1px solid var(--ink-5)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.02em', fontFamily: 'var(--font-ui)' }}>
