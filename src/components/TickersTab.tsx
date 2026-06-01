@@ -247,6 +247,13 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
   const [selected, setSelected] = useState<string | null>(initialTicker ?? null)
   const [sort, setSort] = useState<'count' | 'alpha'>('count')
   const [search, setSearch] = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   const tickers = useMemo(() => {
     if (!data) return []
@@ -268,38 +275,41 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
 
       {/* Left: ticker list */}
       <div style={{
-        width: 280, flexShrink: 0, borderRight: '1px solid var(--ink-5)',
+        width: isMobile ? 64 : 280, flexShrink: 0, borderRight: '1px solid var(--ink-5)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        transition: 'width .2s',
       }}>
-        {/* Search + sort */}
-        <div style={{ padding: '10px 12px 8px', borderBottom: '1px solid var(--ink-6)', flexShrink: 0 }}>
-          <input
-            type="text"
-            placeholder="Search tickers…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{
-              width: '100%', padding: '5px 10px', fontSize: 12,
-              border: '1px solid var(--ink-5)', borderRadius: 'var(--radius-sm)',
-              fontFamily: 'var(--font-ui)', color: 'var(--ink-2)',
-              outline: 'none', background: 'var(--ink-7)',
-            }}
-          />
-          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-            {(['count', 'alpha'] as const).map(s => (
-              <button key={s} onClick={() => setSort(s)} style={{
-                padding: '3px 10px', borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--ink-5)',
-                background: sort === s ? 'var(--ink)' : 'transparent',
-                color: sort === s ? 'var(--white)' : 'var(--ink-3)',
-                fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                fontFamily: 'var(--font-ui)',
-              }}>
-                {s === 'count' ? 'By mentions' : 'A–Z'}
-              </button>
-            ))}
+        {/* Search + sort — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ padding: '10px 12px 8px', borderBottom: '1px solid var(--ink-6)', flexShrink: 0 }}>
+            <input
+              type="text"
+              placeholder="Search tickers…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                width: '100%', padding: '5px 10px', fontSize: 12,
+                border: '1px solid var(--ink-5)', borderRadius: 'var(--radius-sm)',
+                fontFamily: 'var(--font-ui)', color: 'var(--ink-2)',
+                outline: 'none', background: 'var(--ink-7)',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+              {(['count', 'alpha'] as const).map(s => (
+                <button key={s} onClick={() => setSort(s)} style={{
+                  padding: '3px 10px', borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--ink-5)',
+                  background: sort === s ? 'var(--ink)' : 'transparent',
+                  color: sort === s ? 'var(--white)' : 'var(--ink-3)',
+                  fontSize: 11, fontWeight: 500, cursor: 'pointer',
+                  fontFamily: 'var(--font-ui)',
+                }}>
+                  {s === 'count' ? 'By mentions' : 'A–Z'}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* List */}
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
@@ -337,37 +347,41 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
                   {t.ticker}
                 </span>
 
-                {/* Name */}
-                <span style={{
-                  flex: 1, fontSize: 12, color: isSelected ? 'var(--ink)' : 'var(--ink-2)',
-                  fontWeight: isSelected ? 600 : 400,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {t.name}
-                </span>
-
-                {/* Count + dots */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                  {hasSummary && (
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-2)', display: 'inline-block' }} />
-                  )}
-                  {hasPrice && (
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#5ec98b', display: 'inline-block' }} />
-                  )}
-                  {hasCompany && (
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#f0a653', display: 'inline-block' }} />
-                  )}
-                  <span style={{ fontSize: 11, color: 'var(--ink-4)', fontVariantNumeric: 'tabular-nums' }}>
-                    {t.count}
+                {/* Name — hidden on mobile */}
+                {!isMobile && (
+                  <span style={{
+                    flex: 1, fontSize: 12, color: isSelected ? 'var(--ink)' : 'var(--ink-2)',
+                    fontWeight: isSelected ? 600 : 400,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {t.name}
                   </span>
-                </div>
+                )}
+
+                {/* Count + dots — hidden on mobile */}
+                {!isMobile && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                    {hasSummary && (
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-2)', display: 'inline-block' }} />
+                    )}
+                    {hasPrice && (
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#5ec98b', display: 'inline-block' }} />
+                    )}
+                    {hasCompany && (
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#f0a653', display: 'inline-block' }} />
+                    )}
+                    <span style={{ fontSize: 11, color: 'var(--ink-4)', fontVariantNumeric: 'tabular-nums' }}>
+                      {t.count}
+                    </span>
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
 
-        {/* Footer count */}
-        {data && (
+        {/* Footer count — hidden on mobile */}
+        {data && !isMobile && (
           <div style={{ padding: '6px 14px', borderTop: '1px solid var(--ink-6)', fontSize: 11, color: 'var(--ink-4)', flexShrink: 0 }}>
             {tickers.length} tickers · {tickers.filter(t => t.clusters.some(c => c.summary)).length} with summaries
           </div>
