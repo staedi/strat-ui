@@ -431,6 +431,13 @@ function TickerDetail({
   const clustersWithSummary = ticker.clusters.filter(c => c.summary)
   const clustersWithoutSummary = ticker.clusters.filter(c => !c.summary)
   const hasProfile = !!companyMeta
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'var(--font-ui)' }}>
@@ -441,7 +448,10 @@ function TickerDetail({
             <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.02em', fontFamily: 'var(--font-ui)' }}>
               {ticker.ticker}
             </h2>
-            <span style={{ fontSize: 14, color: 'var(--ink-3)', fontWeight: 400 }}>
+            <span style={{
+              fontSize: 14, color: 'var(--ink-3)', fontWeight: 400,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: isMobile ? 120 : 'none'
+            }}>
               {ticker.name}
             </span>
           </div>
