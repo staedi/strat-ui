@@ -66,11 +66,10 @@ function aggregateTickers(data: TopicsData): AggregatedTicker[] {
 
 // ── Shared chart helpers ─────────────────────────────────────────────────────
 
-
 function fmtDate(iso?: string): string {
   if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZoneName: 'short' })
 }
 
 const SECTION_LABEL: React.CSSProperties = {
@@ -504,7 +503,7 @@ function TickerDetail({
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Price · Volume</span></p>
-                {pricesUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtDate(pricesUpdatedAt)}</span>}
+                {pricesUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(pricesUpdatedAt)}</span>}
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 280px', minWidth: 0 }}>
@@ -525,7 +524,7 @@ function TickerDetail({
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Context</span></p>
-                {topicsUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtDate(topicsUpdatedAt)}</span>}
+                {topicsUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(topicsUpdatedAt)}</span>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                 {clustersWithSummary.map(c => (
@@ -608,7 +607,7 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
       {/* Section label row — matches Price · Volume style */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
         <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Sentiment</span></p>
-        {updatedAt && <span style={{ fontSize: 10, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtDate(updatedAt)}</span>}
+        {updatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(updatedAt)}</span>}
       </div>
       {/* Stats row — SENTIMENT label + pct + label + mentions, matches Price/Volume pattern */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>

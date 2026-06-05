@@ -14,6 +14,14 @@ interface Props {
   onModeChange: (mode: AppMode) => void
 }
 
+// ── Shared chart helpers ─────────────────────────────────────────────────────
+
+function fmtDate(iso?: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZoneName: 'short' })
+}
+
 export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeChange }: Props) {
   const { data, loading, error } = useTopicsData(mode)
   const [activeCluster, setActiveCluster] = useState<number | null>(initialCluster ?? null)
@@ -125,7 +133,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
                 onMetaClick={handleMetaClick}
               />
               <div style={{ position: 'absolute', bottom: 12, left: 16, fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
-                Updated {new Date(data.updated_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short' })}
+                Updated {fmtDate(data.updated_at)}
               </div>
             </>
           )}
