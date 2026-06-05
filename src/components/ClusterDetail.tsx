@@ -21,7 +21,7 @@ export default function ClusterDetail({ cluster, meta, onClose, onTickerClick }:
 
   const tickers = useMemo(() => {
     const map = new Map<string, TickerInfo>()
-    for (const t of [...(cluster.related_tickers_named ?? []), ...(cluster.related_tickers_semantic ?? [])]) {
+    for (const t of [...(cluster.related_tickers_named ?? [])]) {
       if (!map.has(t.ticker)) map.set(t.ticker, t)
     }
     return [...map.values()]
