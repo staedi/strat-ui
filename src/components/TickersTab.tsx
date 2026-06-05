@@ -66,6 +66,13 @@ function aggregateTickers(data: TopicsData): AggregatedTicker[] {
 
 // ── Shared chart helpers ─────────────────────────────────────────────────────
 
+
+function fmtDate(iso?: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 const SECTION_LABEL: React.CSSProperties = {
   fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
   textTransform: 'uppercase' as const, color: 'var(--ink-4)',
@@ -400,6 +407,9 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
             pricePoints={pricesData?.prices[selectedTicker.ticker] ?? []}
             sentimentData={sentimentDataFull?.tickers[selectedTicker.ticker] ?? null}
             sentimentWindowStart={sentimentDataFull?.window_start}
+            sentimentUpdatedAt={sentimentDataFull?.updated_at}
+            pricesUpdatedAt={pricesData?.updated_at}
+            topicsUpdatedAt={data?.updated_at}
             companyMeta={companyData?.companies[selectedTicker.ticker] ?? null}
             onClusterClick={onClusterClick}
           />
@@ -416,6 +426,9 @@ function TickerDetail({
   pricePoints,
   sentimentData,
   sentimentWindowStart,
+  sentimentUpdatedAt,
+  pricesUpdatedAt,
+  topicsUpdatedAt,
   companyMeta,
   onClusterClick,
 }: {
@@ -423,6 +436,9 @@ function TickerDetail({
   pricePoints: PricePoint[]
   sentimentData: TickerSentiment | null
   sentimentWindowStart?: string
+  sentimentUpdatedAt?: string
+  pricesUpdatedAt?: string
+  topicsUpdatedAt?: string
   companyMeta: CompanyMeta | null
   onClusterClick: (clusterId: number) => void
 }) {
@@ -485,25 +501,32 @@ function TickerDetail({
         {tab === 'overview' && (<>
           {/* Price + Volume — side by side on desktop, stacked on mobile */}
           {pricePoints.length > 0 && (
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
-              <div style={{ flex: '1 1 280px', minWidth: 0 }}>
-                <PriceChart points={pricePoints} />
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Price · Volume</span></p>
+                {pricesUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtDate(pricesUpdatedAt)}</span>}
               </div>
-              <div style={{ flex: '1 1 280px', minWidth: 0 }}>
-                <VolumeChart points={pricePoints} />
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 280px', minWidth: 0 }}>
+                  <PriceChart points={pricePoints} />
+                </div>
+                <div style={{ flex: '1 1 280px', minWidth: 0 }}>
+                  <VolumeChart points={pricePoints} />
+                </div>
               </div>
             </div>
           )}
 
           {/* Sentiment */}
-          {sentimentData && <SentimentChart sentiment={sentimentData} windowStart={sentimentWindowStart} />}
+          {sentimentData && <SentimentChart sentiment={sentimentData} windowStart={sentimentWindowStart} updatedAt={sentimentUpdatedAt} />}
 
           {/* Context clusters */}
           {clustersWithSummary.length > 0 && (
             <>
-              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 10, fontFamily: 'var(--font-ui)' }}>
-                Context
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Context</span></p>
+                {topicsUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtDate(topicsUpdatedAt)}</span>}
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                 {clustersWithSummary.map(c => (
                   <ClusterCard key={c.cluster_id} cluster={c} onClusterClick={onClusterClick} />
@@ -514,9 +537,7 @@ function TickerDetail({
 
           {clustersWithoutSummary.length > 0 && (
             <>
-              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 10, fontFamily: 'var(--font-ui)' }}>
-                Also appears in
-              </p>
+              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-4)', marginBottom: 10, fontFamily: 'var(--font-ui)' }}>Also appears in</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {clustersWithoutSummary.map(c => (
                   <span key={c.cluster_id} style={{
@@ -542,7 +563,7 @@ function TickerDetail({
 
 // ── Sentiment chart ───────────────────────────────────────────────────────────
 
-function SentimentChart({ sentiment, windowStart }: { sentiment: TickerSentiment; windowStart?: string }) {
+function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: TickerSentiment; windowStart?: string; updatedAt?: string }) {
   const { daily, clusters, positive_pct, negative_pct, total } = sentiment
 
   if (!daily || daily.length === 0) return null
@@ -576,27 +597,27 @@ function SentimentChart({ sentiment, windowStart }: { sentiment: TickerSentiment
   // Top clusters sorted by total desc
   const topClusters = [...(clusters ?? [])].filter(c => c.total >= 2).sort((a, b) => b.total - a.total).slice(0, 4)
 
+  const dominant = positive_pct >= negative_pct
+  const pct = dominant ? positive_pct : negative_pct
+  const color = dominant ? '#5ec98b' : '#e06c75'
+  const label = dominant ? 'Positive' : 'Negative'
+  const sign = dominant ? '+' : '-'
+
   return (
     <div style={{ marginBottom: 20 }}>
-      {/* Header */}
+      {/* Section label row — matches Price · Volume style */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Sentiment</span></p>
+        {updatedAt && <span style={{ fontSize: 10, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtDate(updatedAt)}</span>}
+      </div>
+      {/* Stats row — SENTIMENT label + pct + label + mentions, matches Price/Volume pattern */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
         <p style={SECTION_LABEL}>Sentiment</p>
-        {(() => {
-          const dominant = positive_pct >= negative_pct
-          const pct = dominant ? positive_pct : negative_pct
-          const color = dominant ? '#5ec98b' : '#e06c75'
-          const label = dominant ? 'Positive' : 'Negative'
-          const sign = dominant ? '+' : '-'
-          return (
-            <>
-              <span style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)' }}>
-                {sign}{pct.toFixed(1)}%
-              </span>
-              <span style={{ ...SECTION_STATS, color: 'var(--ink-3)' }}>{label}</span>
-              <span style={{ ...SECTION_STATS, marginLeft: 'auto' }}>{total} mentions ({period})</span>
-            </>
-          )
-        })()}
+        <span style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)' }}>
+          {sign}{pct.toFixed(1)}%
+        </span>
+        <span style={{ ...SECTION_STATS, color: 'var(--ink-3)' }}>{label}</span>
+        <span style={{ ...SECTION_STATS, marginLeft: 'auto', color: 'var(--ink-4)' }}>{total} mentions ({period})</span>
       </div>
 
       {/* Daily bar chart */}

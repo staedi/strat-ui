@@ -125,7 +125,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
                 onMetaClick={handleMetaClick}
               />
               <div style={{ position: 'absolute', bottom: 12, left: 16, fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
-                updated {new Date(data.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                Updated {new Date(data.updated_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short' })}
               </div>
             </>
           )}
