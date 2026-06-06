@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useRef } from 'react'
 import { hierarchy, pack } from 'd3-hierarchy'
 
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface ArticleNode {
