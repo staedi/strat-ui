@@ -410,6 +410,8 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
             pricesUpdatedAt={pricesData?.updated_at}
             topicsUpdatedAt={data?.updated_at}
             companyMeta={companyData?.companies[selectedTicker.ticker] ?? null}
+            allPricesData={pricesData?.prices ?? {}}
+            allSentimentData={sentimentDataFull?.tickers ?? {}}
             onClusterClick={onClusterClick}
           />
         )}
@@ -429,6 +431,8 @@ function TickerDetail({
   pricesUpdatedAt,
   topicsUpdatedAt,
   companyMeta,
+  allPricesData,
+  allSentimentData,
   onClusterClick,
 }: {
   ticker: AggregatedTicker
@@ -439,6 +443,8 @@ function TickerDetail({
   pricesUpdatedAt?: string
   topicsUpdatedAt?: string
   companyMeta: CompanyMeta | null
+  allPricesData: Record<string, PricePoint[]>
+  allSentimentData: Record<string, TickerSentiment>
   onClusterClick: (clusterId: number) => void
 }) {
   const [tab, setTab] = useState<'overview' | 'profile'>('overview')
@@ -553,7 +559,12 @@ function TickerDetail({
         </>)}
 
         {tab === 'profile' && companyMeta && (
-          <CompanySection meta={companyMeta} ticker={ticker} />
+          <CompanySection
+            meta={companyMeta}
+            ticker={ticker}
+            allPricesData={allPricesData}
+            allSentimentData={allSentimentData}
+          />
         )}
       </div>
     </div>
@@ -563,7 +574,7 @@ function TickerDetail({
 // ── Sentiment chart ───────────────────────────────────────────────────────────
 
 function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: TickerSentiment; windowStart?: string; updatedAt?: string }) {
-  const { daily, clusters, positive_pct, negative_pct, total } = sentiment
+  const { daily, clusters, score, total } = sentiment
 
   if (!daily || daily.length === 0) return null
 
@@ -596,8 +607,8 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
   // Top clusters sorted by total desc
   const topClusters = [...(clusters ?? [])].filter(c => c.total >= 2).sort((a, b) => b.total - a.total).slice(0, 4)
 
-  const dominant = positive_pct >= negative_pct
-  const pct = dominant ? positive_pct : negative_pct
+  const dominant = score >= 0
+  const pct = Math.abs(score) * 100
   const color = dominant ? '#5ec98b' : '#e06c75'
   const label = dominant ? 'Positive' : 'Negative'
   const sign = dominant ? '+' : '-'
@@ -694,43 +705,254 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
   )
 }
 
+// ── Peer comparison chart ─────────────────────────────────────────────────────
+
+const PEER_PALETTE = [
+  '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
+  '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',
+  '#4db6ac', '#ff8a65',
+]
+
+function PeerComparisonChart({
+  selectedTicker,
+  comparisonTickers,
+  peerNames,
+  allPricesData,
+  allSentimentData,
+}: {
+  selectedTicker: string
+  comparisonTickers: string[]  // selected ticker first, then peers
+  peerNames: Record<string, string>
+  allPricesData: Record<string, PricePoint[]>
+  allSentimentData: Record<string, TickerSentiment>
+}) {
+  if (comparisonTickers.length < 2) return null
+
+  const allTickers = comparisonTickers
+  // Normalize each ticker to % change from first close
+  type PriceLine = { pct: number[]; change: number }
+  const priceMap = new Map<string, PriceLine>()
+
+  let globalMin = 0
+  let globalMax = 0
+
+  for (const t of allTickers) {
+    const closes = (allPricesData[t] ?? [])
+      .map(p => p.close)
+      .filter((c): c is number => c !== null)
+    if (closes.length < 2) continue
+    const base = closes[0]
+    const pct = closes.map(c => ((c - base) / base) * 100)
+    const change = pct[pct.length - 1]
+    globalMin = Math.min(globalMin, ...pct)
+    globalMax = Math.max(globalMax, ...pct)
+    priceMap.set(t, { pct, change })
+  }
+
+  // Add a little padding to y-range so lines don't hug the edges
+  const pad = Math.max((globalMax - globalMin) * 0.15, 0.3)
+  const yMin = globalMin - pad
+  const yMax = globalMax + pad
+  const yRange = yMax - yMin || 1
+
+  const SW = 160  // sparkline width
+  const SH = 28   // sparkline height
+
+  function makeSparkPath(pct: number[]): string {
+    return pct.map((v, i) => {
+      const x = (i / (pct.length - 1)) * SW
+      const y = SH - ((v - yMin) / yRange) * SH
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+    }).join(' ')
+  }
+
+  // Zero baseline y position (shared)
+  const baselineY = SH - ((0 - yMin) / yRange) * SH
+
+  return (
+    <div>
+      {/* Column headers */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '0 0 6px', borderBottom: '1px solid var(--ink-6)',
+        marginBottom: 4,
+      }}>
+        <span style={{ width: 44, flexShrink: 0 }} />
+        <span style={{ flex: '0 0 100px', fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)' }} />
+        <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)' }}>Price</span>
+        <span style={{ width: 44, flexShrink: 0 }} />
+        <span style={{ width: 12, flexShrink: 0 }} />
+        <span style={{ width: 90, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)' }}>Sentiment</span>
+        <span style={{ width: 44, flexShrink: 0 }} />
+      </div>
+
+      {/* Rows */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {allTickers.map((t, idx) => {
+          const isSelected = idx === 0
+          const color = PEER_PALETTE[idx % PEER_PALETTE.length]
+          const priceLine = priceMap.get(t)
+          const sentiment = allSentimentData[t]
+          const hasPrice = !!priceLine
+          const hasSentiment = !!sentiment
+
+          if (!hasPrice && !hasSentiment) return null
+
+          const change = priceLine?.change ?? null
+          const changeColor = change === null ? 'var(--ink-4)' : change >= 0 ? '#5ec98b' : '#e06c75'
+
+          // score is in [-1, 1], decay-weighted — same metric as Overview tab
+          const score = sentiment?.score ?? null
+          const isPositive = score !== null && score >= 0
+          const sentColor = score !== null ? (isPositive ? '#5ec98b' : '#e06c75') : 'var(--ink-5)'
+
+          return (
+            <div key={t} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '6px 4px',
+              borderBottom: '1px solid var(--ink-7)',
+              background: isSelected ? 'var(--ink-7)' : 'transparent',
+              borderRadius: isSelected ? 4 : 0,
+            }}>
+              {/* Ticker badge */}
+              <span style={{
+                flexShrink: 0, width: 44, textAlign: 'center',
+                fontSize: 10, fontWeight: 700, padding: '2px 4px', borderRadius: 4,
+                background: isSelected ? color : 'var(--ink-6)',
+                color: isSelected ? '#fff' : 'var(--ink-3)',
+                fontFamily: 'var(--font-mono)',
+              }}>
+                {t}
+              </span>
+
+              {/* Company name — shown for all tickers */}
+              <span style={{
+                flex: '0 0 120px', fontSize: 11,
+                color: isSelected ? 'var(--ink-2)' : 'var(--ink-4)',
+                fontWeight: isSelected ? 500 : 400,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontFamily: 'var(--font-ui)',
+              }}>
+                {peerNames[t] ?? ''}
+              </span>
+
+              {/* Sparkline — shared y-scale */}
+              <div style={{ flex: 1, minWidth: 120 }}>
+                {hasPrice ? (
+                  <svg width="100%" viewBox={`0 0 ${SW} ${SH}`}
+                    preserveAspectRatio="none"
+                    style={{ display: 'block', height: SH }}>
+                    <line x1={0} y1={baselineY.toFixed(1)} x2={SW} y2={baselineY.toFixed(1)}
+                      stroke="var(--ink-5)" strokeWidth={0.6} strokeDasharray="2 2" />
+                    <path
+                      d={makeSparkPath(priceLine!.pct)}
+                      fill="none"
+                      stroke={color}
+                      strokeWidth={isSelected ? 1.75 : 1.25}
+                      strokeOpacity={isSelected ? 1 : 0.6}
+                      strokeLinejoin="round" strokeLinecap="round"
+                    />
+                    <circle
+                      cx={SW}
+                      cy={(SH - ((priceLine!.pct[priceLine!.pct.length - 1] - yMin) / yRange) * SH).toFixed(1)}
+                      r={isSelected ? 2.5 : 1.75} fill={color}
+                      opacity={isSelected ? 1 : 0.7}
+                    />
+                  </svg>
+                ) : (
+                  <div style={{ height: SH, display: 'flex', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>—</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Price % change */}
+              <span style={{
+                flexShrink: 0, width: 44, textAlign: 'right',
+                fontSize: 11, fontWeight: 600, color: changeColor,
+                fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
+              }}>
+                {change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(1)}%` : '—'}
+              </span>
+
+              {/* Spacer between price and sentiment */}
+              <span style={{ flexShrink: 0, width: 12 }} />
+
+              {/* Sentiment split bar — midpoint at 0, fills right for positive, left for negative */}
+              <div style={{ flexShrink: 0, width: 90, height: 14, position: 'relative' }}>
+                {hasSentiment && score !== null ? (
+                  <>
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      background: 'var(--ink-6)', borderRadius: 2,
+                    }} />
+                    <div style={{
+                      position: 'absolute', left: '50%', top: 0, bottom: 0,
+                      width: 1, background: 'var(--ink-4)',
+                    }} />
+                    {isPositive ? (
+                      <div style={{
+                        position: 'absolute',
+                        left: '50%', top: 0, bottom: 0,
+                        width: `${Math.abs(score) * 50}%`,
+                        background: '#5ec98b',
+                        opacity: isSelected ? 0.9 : 0.6,
+                        borderRadius: '0 2px 2px 0',
+                      }} />
+                    ) : (
+                      <div style={{
+                        position: 'absolute',
+                        right: '50%', top: 0, bottom: 0,
+                        width: `${Math.abs(score) * 50}%`,
+                        background: '#e06c75',
+                        opacity: isSelected ? 0.9 : 0.6,
+                        borderRadius: '2px 0 0 2px',
+                      }} />
+                    )}
+                  </>
+                ) : (
+                  <div style={{ height: 14, display: 'flex', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: 'var(--ink-5)' }}>—</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Sentiment score — signed %, matches Overview tab */}
+              <span style={{
+                flexShrink: 0, width: 44, textAlign: 'right',
+                fontSize: 11, fontWeight: 600, color: sentColor,
+                fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
+              }}>
+                {score !== null
+                  ? `${score >= 0 ? '+' : ''}${(score * 100).toFixed(1)}%`
+                  : '—'}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── Company section ───────────────────────────────────────────────────────────
 
 function CompanySection({
   meta,
   ticker,
+  allPricesData,
+  allSentimentData,
 }: {
   meta: CompanyMeta
   ticker: AggregatedTicker
+  allPricesData: Record<string, PricePoint[]>
+  allSentimentData: Record<string, TickerSentiment>
 }) {
   const {
     summary, news_role,
     contextual_peers, contextual_peer_names,
     industry, industry_peers, industry_peer_names, industry_peer_theme,
   } = meta
-
-  // Group news peers by cluster using display names for matching
-  const clusterGroups: { name: string; meta: string; cluster_id: number; peers: string[] }[] = []
-  const assignedPeers = new Set<string>()
-
-  for (const cluster of ticker.clusters) {
-    const ctx = cluster.context ?? []
-    const inCluster = (contextual_peers ?? []).filter(
-      p => !assignedPeers.has(p) &&
-        ctx.some((s: string) => s.includes(contextual_peer_names?.[p] ?? p))
-    )
-    if (inCluster.length > 0) {
-      clusterGroups.push({
-        name: cluster.name,
-        meta: cluster.meta ?? '',
-        cluster_id: cluster.cluster_id,
-        peers: inCluster,
-      })
-      inCluster.forEach(p => assignedPeers.add(p))
-    }
-  }
-  const ungroupedPeers = (contextual_peers ?? []).filter(p => !assignedPeers.has(p))
-  const hasPeers = clusterGroups.length > 0 || ungroupedPeers.length > 0
 
   const PeerBadge = ({ t, names }: { t: string; names?: Record<string, string> }) => (
     <span style={{
@@ -743,13 +965,54 @@ function CompanySection({
     </span>
   )
 
+  // Split news peers into those with data (full rows) and without (badge-only)
+  const newsPeers = contextual_peers ?? []
+  const newsPeersWithData = newsPeers.filter(
+    p => (allPricesData[p]?.length ?? 0) >= 2 || !!allSentimentData[p]
+  )
+  const newsPeersBadgeOnly = newsPeers.filter(
+    p => !newsPeersWithData.includes(p)
+  )
+
+  // Industry peers — full rows if data exists, badge-only otherwise
+  const indPeers = industry_peers ?? []
+  const indPeersWithData = indPeers.filter(
+    p => (allPricesData[p]?.length ?? 0) >= 2 || !!allSentimentData[p]
+  )
+  const indPeersBadgeOnly = indPeers.filter(
+    p => !indPeersWithData.includes(p)
+  )
+
+  const hasNewsPeers = newsPeers.length > 0
+  const hasIndPeers = indPeers.length > 0
+  const hasPeers = hasNewsPeers || hasIndPeers
+
+  // News comparison: selected ticker + news peers with data
+  const newsComparisonTickers = [ticker.ticker, ...newsPeersWithData]
+
+  // Industry comparison: selected ticker + industry peers with data
+  const indComparisonTickers = [ticker.ticker, ...indPeersWithData]
+
+  // Merged names map
+  const allPeerNames: Record<string, string> = {
+    [ticker.ticker]: ticker.name ?? '',
+    ...(contextual_peer_names ?? {}),
+    ...(industry_peer_names ?? {}),
+  }
+
+  const SUBLABEL = {
+    fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
+    textTransform: 'uppercase' as const, color: 'var(--ink-4)',
+    fontFamily: 'var(--font-ui)', marginBottom: 8,
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Industry badge */}
       {industry && (
         <div>
-          <p style={{ ...SECTION_LABEL, marginBottom: 6 }}>Industry</p>
+          <p style={{ ...SECTION_LABEL, marginBottom: 6, fontSize: 11 }}>Industry</p>
           <span style={{
             fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
             textTransform: 'uppercase', padding: '3px 8px', borderRadius: 20,
@@ -764,7 +1027,7 @@ function CompanySection({
       {/* About */}
       {summary && (
         <div>
-          <p style={{ ...SECTION_LABEL, marginBottom: 8 }}>About</p>
+          <p style={{ ...SECTION_LABEL, marginBottom: 8, fontSize: 11 }}>About</p>
           <p style={{
             fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.6,
             fontFamily: 'var(--font-ui)', margin: 0,
@@ -779,7 +1042,7 @@ function CompanySection({
       {/* Current positioning */}
       {news_role && (
         <div>
-          <p style={{ ...SECTION_LABEL, marginBottom: 8 }}>Current positioning</p>
+          <p style={{ ...SECTION_LABEL, marginBottom: 8, fontSize: 11 }}>Current positioning</p>
           <p style={{
             fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.6,
             fontFamily: 'var(--font-ui)', margin: 0,
@@ -791,83 +1054,74 @@ function CompanySection({
         </div>
       )}
 
-      {/* News peers — cluster cards with accent color */}
+      {/* Peers section */}
       {hasPeers && (
         <div>
-          <p style={{ ...SECTION_LABEL, marginBottom: 10 }}>News peers</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{ ...SECTION_LABEL, marginBottom: 10, fontSize: 11 }}>Peers</p>
 
-            {clusterGroups.map(group => {
-              const color = clusterColor(group.cluster_id)
-              return (
-                <div key={group.name} style={{
-                  padding: '10px 14px', borderRadius: 'var(--radius)',
-                  border: '1px solid var(--ink-6)', background: 'var(--ink-7)',
-                }}>
-                  {group.meta && (
-                    <p style={{
-                      fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
-                      textTransform: 'uppercase', color: 'var(--ink-4)',
-                      fontFamily: 'var(--font-ui)', marginBottom: 2,
-                    }}>
-                      {group.meta}
-                    </p>
-                  )}
+          {/* ── News peers ── */}
+          {hasNewsPeers && (
+            <div>
+              <p style={SUBLABEL}>News</p>
+              {newsComparisonTickers.length > 1 && (
+                <PeerComparisonChart
+                  selectedTicker={ticker.ticker}
+                  comparisonTickers={newsComparisonTickers}
+                  peerNames={allPeerNames}
+                  allPricesData={allPricesData}
+                  allSentimentData={allSentimentData}
+                />
+              )}
+              {newsPeersBadgeOnly.length > 0 && (
+                <div style={{ marginTop: newsComparisonTickers.length > 1 ? 10 : 0 }}>
                   <p style={{
-                    fontSize: 12, fontWeight: 600, color,
-                    fontFamily: 'var(--font-ui)', marginBottom: 8,
+                    fontSize: 10, fontWeight: 400, color: 'var(--ink-5)',
+                    fontFamily: 'var(--font-ui)', marginBottom: 6,
+                    letterSpacing: '0.03em', fontStyle: 'italic',
                   }}>
-                    {group.name}
+                    Also co-mentioned
                   </p>
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                    {group.peers.map(t => <PeerBadge key={t} t={t} names={contextual_peer_names} />)}
+                    {newsPeersBadgeOnly.map(t => (
+                      <PeerBadge key={t} t={t} names={contextual_peer_names} />
+                    ))}
                   </div>
                 </div>
-              )
-            })}
-
-            {ungroupedPeers.length > 0 && (
-              <div style={{
-                padding: '10px 14px', borderRadius: 'var(--radius)',
-                border: '1px solid var(--ink-6)', background: 'var(--ink-7)',
-              }}>
-                <p style={{
-                  fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
-                  textTransform: 'uppercase', color: 'var(--ink-4)',
-                  fontFamily: 'var(--font-ui)', marginBottom: 8,
-                }}>
-                  Other
-                </p>
-                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                  {ungroupedPeers.map(t => <PeerBadge key={t} t={t} names={contextual_peer_names} />)}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Industry peers */}
-      {industry_peers && industry_peers.length > 0 && (
-        <div>
-          <p style={{ ...SECTION_LABEL, marginBottom: 10 }}>Industry peers</p>
-          <div style={{
-            padding: '10px 14px', borderRadius: 'var(--radius)',
-            border: '1px solid var(--ink-6)', background: 'var(--ink-7)',
-          }}>
-            {industry_peer_theme && (
-              <p style={{
-                fontSize: 11, fontWeight: 600,
-                textTransform: 'uppercase', color: 'var(--ink-4)',
-                fontFamily: 'var(--font-ui)', marginBottom: 8,
-              }}>
-                {industry_peer_theme}
-              </p>
-            )}
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              {industry_peers.map(t => <PeerBadge key={t} t={t} names={industry_peer_names} />)}
+              )}
             </div>
-          </div>
+          )}
+
+          {/* ── Industry peers ── */}
+          {hasIndPeers && (
+            <div style={{
+              marginTop: hasNewsPeers ? 14 : 0,
+              paddingTop: hasNewsPeers ? 14 : 0,
+              borderTop: hasNewsPeers ? '1px solid var(--ink-6)' : 'none',
+            }}>
+              <p style={SUBLABEL}>
+                {industry_peer_theme ? `Industry · ${industry_peer_theme}` : 'Industry'}
+              </p>
+              {indComparisonTickers.length > 1 && (
+                <PeerComparisonChart
+                  selectedTicker={ticker.ticker}
+                  comparisonTickers={indComparisonTickers}
+                  peerNames={allPeerNames}
+                  allPricesData={allPricesData}
+                  allSentimentData={allSentimentData}
+                />
+              )}
+              {indPeersBadgeOnly.length > 0 && (
+                <div style={{ marginTop: indComparisonTickers.length > 1 ? 10 : 0 }}>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    {indPeersBadgeOnly.map(t => (
+                      <PeerBadge key={t} t={t} names={industry_peer_names} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       )}
 
