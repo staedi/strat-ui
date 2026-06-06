@@ -40,7 +40,7 @@ function aggregateTickers(data: TopicsData): AggregatedTicker[] {
   for (const meta of data.children) {
     for (const cluster of meta.children) {
       const tickers = [
-        ...(cluster.related_tickers_named ?? []),
+        ...(cluster.related_tickers ?? []),
       ]
       for (const t of tickers) {
         if (!map.has(t.ticker)) {

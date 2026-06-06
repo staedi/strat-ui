@@ -11,8 +11,7 @@ export interface TickerInfo { ticker: string; name: string; count?: number }
 export interface ClusterNode {
   cluster_id: number; name: string; count: number
   children: ArticleNode[]
-  related_tickers_named?: TickerInfo[]
-  related_tickers_semantic?: TickerInfo[]
+  related_tickers?: TickerInfo[]
   ticker_summary?: Record<string, string>
   ticker_context?: Record<string, string[]>
 }
@@ -199,14 +198,12 @@ export default function CirclePacking({
               <g key={`c-${cd.cluster_id}`} style={{ cursor: 'pointer' }}
                 onClick={() => handleClusterClick(cd.cluster_id)}
                 onMouseEnter={e => {
-                  const named = cd.related_tickers_named ?? []
-                  const semantic = cd.related_tickers_semantic ?? []
+                  const named = cd.related_tickers ?? []
                   showTooltip(
                     e.clientX, e.clientY,
                     fixEncoding(cd.name),
                     `${cd.count} article${cd.count !== 1 ? 's' : ''}`,
                     named.length ? `Named: ${named.map(t => t.ticker).join('  ·  ')}` : undefined,
-                    semantic.length ? `Semantic: ${semantic.map(t => t.ticker).join('  ·  ')}` : undefined,
                   )
                 }}
                 onMouseLeave={hideTooltip}
