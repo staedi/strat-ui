@@ -1074,13 +1074,13 @@ function CompanySection({
               )}
               {newsPeersBadgeOnly.length > 0 && (
                 <div style={{ marginTop: newsComparisonTickers.length > 1 ? 10 : 0 }}>
-                  <p style={{
+                  {/* <p style={{
                     fontSize: 10, fontWeight: 400, color: 'var(--ink-5)',
                     fontFamily: 'var(--font-ui)', marginBottom: 6,
-                    letterSpacing: '0.03em', fontStyle: 'italic',
+                    letterSpacing: '0.03em', //fontStyle: 'italic',
                   }}>
                     Also co-mentioned
-                  </p>
+                  </p> */}
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                     {newsPeersBadgeOnly.map(t => (
                       <PeerBadge key={t} t={t} names={contextual_peer_names} />
