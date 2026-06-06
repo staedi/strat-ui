@@ -8,6 +8,7 @@ import type { TickerSentiment, SentimentDay, SentimentCluster } from '../hooks/u
 import { useCompanyData } from '../hooks/useCompanyData'
 import type { CompanyMeta } from '../hooks/useCompanyData'
 
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface AggregatedTicker {
