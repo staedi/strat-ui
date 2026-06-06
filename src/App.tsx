@@ -2,13 +2,12 @@ import { useState } from 'react'
 import TopicsTab from './components/TopicsTab'
 import TickersTab from './components/TickersTab'
 
-type Tab = 'topics' | 'tickers' | 'sentiment'
+type Tab = 'topics' | 'tickers'
 type Mode = 'recent' | 'full'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'topics', label: 'Topics' },
   { id: 'tickers', label: 'Tickers' },
-  { id: 'sentiment', label: 'Sentiment' },
 ]
 
 export default function App() {
@@ -96,11 +95,6 @@ export default function App() {
             onClusterClick={navigateToCluster}
             mode={mode}
           />
-        )}
-        {tab === 'sentiment' && (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-4)' }}>
-            Sentiment — coming soon
-          </div>
         )}
       </main>
     </div>
