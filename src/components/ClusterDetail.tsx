@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { ClusterNode, MetaCategoryNode, TickerInfo } from './CirclePacking'
 
-
 const PALETTE = [
   '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
   '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',

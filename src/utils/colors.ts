@@ -1,9 +1,9 @@
 import type { MetaCategoryNode } from '../components/CirclePacking'
 
 const PALETTE = [
-  '#4e9af1','#f0a653','#5ec98b','#e06c75','#c792ea',
-  '#56b6c2','#e5c07b','#98c379','#f07178','#7986cb',
-  '#4db6ac','#ff8a65',
+  '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
+  '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',
+  '#4db6ac', '#ff8a65',
 ]
 
 export function clusterColor(id: number): string {
@@ -26,7 +26,7 @@ export function allTickers(metaCategories: MetaCategoryNode[]) {
   const map = new Map<string, { ticker: string; name: string; count: number; clusters: string[] }>()
   for (const meta of metaCategories) {
     for (const cluster of meta.children) {
-      const tickers = [...(cluster.related_tickers_named ?? []), ...(cluster.related_tickers_semantic ?? [])]
+      const tickers = [...(cluster.related_tickers ?? [])]
       for (const t of tickers) {
         if (!map.has(t.ticker)) map.set(t.ticker, { ticker: t.ticker, name: t.name, count: 0, clusters: [] })
         const entry = map.get(t.ticker)!
