@@ -778,11 +778,11 @@ function PeerComparisonChart({
         marginBottom: 4,
       }}>
         <span style={{ width: 44, flexShrink: 0 }} />
-        <span style={{ flex: '0 0 100px', fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)' }} />
-        <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)' }}>Price</span>
+        <span style={{ flex: '0 0 120px' }} />
+        <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
         <span style={{ width: 44, flexShrink: 0 }} />
         <span style={{ width: 12, flexShrink: 0 }} />
-        <span style={{ width: 90, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)' }}>Sentiment</span>
+        <span style={{ width: 90, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
         <span style={{ width: 44, flexShrink: 0 }} />
       </div>
 
