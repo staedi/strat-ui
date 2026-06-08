@@ -103,6 +103,13 @@ function periodLabel(dateFirst: string, dateLast: string): string {
 }
 
 function PriceChart({ points }: { points: PricePoint[] }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   const closes = points.map(p => p.close).filter((c): c is number => c !== null)
   if (closes.length < 2) return null
 
@@ -134,7 +141,7 @@ function PriceChart({ points }: { points: PricePoint[] }) {
   return (
     <div>
       {/* Section label + stats */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: isMobile ? 2 : 6, flexWrap: 'nowrap' }}>
         <p style={SECTION_LABEL}>Price</p>
         <span style={{
           fontSize: 14, fontWeight: 700, color: 'var(--ink)',
@@ -148,9 +155,15 @@ function PriceChart({ points }: { points: PricePoint[] }) {
         }}>
           {up ? '+' : ''}{chg.toFixed(2)}% ({period})
         </span>
-        <span style={SECTION_STATS}>min ${minPrice.toFixed(2)}</span>
-        <span style={SECTION_STATS}>max ${maxPrice.toFixed(2)}</span>
+        {!isMobile && <span style={SECTION_STATS}>min ${minPrice.toFixed(2)}</span>}
+        {!isMobile && <span style={SECTION_STATS}>max ${maxPrice.toFixed(2)}</span>}
       </div>
+      {isMobile && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 6 }}>
+          <span style={SECTION_STATS}>min ${minPrice.toFixed(2)}</span>
+          <span style={SECTION_STATS}>max ${maxPrice.toFixed(2)}</span>
+        </div>
+      )}
       {/* Chart */}
       <div style={{ background: 'var(--ink-7)', borderRadius: 4, padding: '4px 0' }}>
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
@@ -169,6 +182,13 @@ function PriceChart({ points }: { points: PricePoint[] }) {
 // ── Volume chart ──────────────────────────────────────────────────────────────
 
 function VolumeChart({ points }: { points: PricePoint[] }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   const volumes = points.map(p => p.volume).filter((v): v is number => v !== null)
   if (volumes.length < 2) return null
 
@@ -192,7 +212,7 @@ function VolumeChart({ points }: { points: PricePoint[] }) {
   return (
     <div>
       {/* Section label + stats */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: isMobile ? 2 : 6, flexWrap: 'nowrap' }}>
         <p style={SECTION_LABEL}>Volume</p>
         <span style={{
           fontSize: 14, fontWeight: 700, color: 'var(--ink)',
@@ -207,9 +227,15 @@ function VolumeChart({ points }: { points: PricePoint[] }) {
         }}>
           {volUp ? '+' : ''}{volChg.toFixed(1)}% vs avg ({period})
         </span>
-        <span style={SECTION_STATS}>min {fmtVol(minVol)}</span>
-        <span style={SECTION_STATS}>max {fmtVol(maxVol)}</span>
+        {!isMobile && <span style={SECTION_STATS}>min {fmtVol(minVol)}</span>}
+        {!isMobile && <span style={SECTION_STATS}>max {fmtVol(maxVol)}</span>}
       </div>
+      {isMobile && (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 6 }}>
+          <span style={SECTION_STATS}>min {fmtVol(minVol)}</span>
+          <span style={SECTION_STATS}>max {fmtVol(maxVol)}</span>
+        </div>
+      )}
       {/* Chart */}
       <div style={{ background: 'var(--ink-7)', borderRadius: 4, padding: '4px 0' }}>
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
@@ -564,6 +590,7 @@ function TickerDetail({
             ticker={ticker}
             allPricesData={allPricesData}
             allSentimentData={allSentimentData}
+            isMobile={isMobile}
           />
         )}
       </div>
@@ -719,12 +746,14 @@ function PeerComparisonChart({
   peerNames,
   allPricesData,
   allSentimentData,
+  isMobile = false,
 }: {
   selectedTicker: string
   comparisonTickers: string[]  // selected ticker first, then peers
   peerNames: Record<string, string>
   allPricesData: Record<string, PricePoint[]>
   allSentimentData: Record<string, TickerSentiment>
+  isMobile?: boolean
 }) {
   if (comparisonTickers.length < 2) return null
 
@@ -778,7 +807,7 @@ function PeerComparisonChart({
         marginBottom: 4,
       }}>
         <span style={{ width: 44, flexShrink: 0 }} />
-        <span style={{ flex: '0 0 120px' }} />
+        {!isMobile && <span style={{ flex: '0 0 120px' }} />}
         <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
         <span style={{ width: 44, flexShrink: 0 }} />
         <span style={{ width: 12, flexShrink: 0 }} />
@@ -825,16 +854,18 @@ function PeerComparisonChart({
                 {t}
               </span>
 
-              {/* Company name — shown for all tickers */}
-              <span style={{
-                flex: '0 0 120px', fontSize: 11,
-                color: isSelected ? 'var(--ink-2)' : 'var(--ink-4)',
-                fontWeight: isSelected ? 500 : 400,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                fontFamily: 'var(--font-ui)',
-              }}>
-                {peerNames[t] ?? ''}
-              </span>
+              {/* Company name — hidden on mobile */}
+              {!isMobile && (
+                <span style={{
+                  flex: '0 0 120px', fontSize: 11,
+                  color: isSelected ? 'var(--ink-2)' : 'var(--ink-4)',
+                  fontWeight: isSelected ? 500 : 400,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  fontFamily: 'var(--font-ui)',
+                }}>
+                  {peerNames[t] ?? ''}
+                </span>
+              )}
 
               {/* Sparkline — shared y-scale */}
               <div style={{ flex: 1, minWidth: 120 }}>
@@ -942,11 +973,13 @@ function CompanySection({
   ticker,
   allPricesData,
   allSentimentData,
+  isMobile = false,
 }: {
   meta: CompanyMeta
   ticker: AggregatedTicker
   allPricesData: Record<string, PricePoint[]>
   allSentimentData: Record<string, TickerSentiment>
+  isMobile?: boolean
 }) {
   const {
     summary, news_role,
@@ -1070,6 +1103,7 @@ function CompanySection({
                   peerNames={allPeerNames}
                   allPricesData={allPricesData}
                   allSentimentData={allSentimentData}
+                  isMobile={isMobile}
                 />
               )}
               {newsPeersBadgeOnly.length > 0 && (
@@ -1108,6 +1142,7 @@ function CompanySection({
                   peerNames={allPeerNames}
                   allPricesData={allPricesData}
                   allSentimentData={allSentimentData}
+                  isMobile={isMobile}
                 />
               )}
               {indPeersBadgeOnly.length > 0 && (
