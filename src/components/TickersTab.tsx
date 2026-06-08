@@ -1097,20 +1097,14 @@ function CompanySection({
             <div>
               <p style={SUBLABEL}>News</p>
               {newsComparisonTickers.length > 1 && (
-                <div style={{
-                  border: isMobile ? '1px solid var(--ink-6)' : 'none',
-                  borderRadius: isMobile ? 4 : 0,
-                  padding: isMobile ? '8px' : 0,
-                }}>
-                  <PeerComparisonChart
-                    selectedTicker={ticker.ticker}
-                    comparisonTickers={newsComparisonTickers}
-                    peerNames={allPeerNames}
-                    allPricesData={allPricesData}
-                    allSentimentData={allSentimentData}
-                    isMobile={isMobile}
-                  />
-                </div>
+                <PeerComparisonChart
+                  selectedTicker={ticker.ticker}
+                  comparisonTickers={newsComparisonTickers}
+                  peerNames={allPeerNames}
+                  allPricesData={allPricesData}
+                  allSentimentData={allSentimentData}
+                  isMobile={isMobile}
+                />
               )}
               {newsPeersBadgeOnly.length > 0 && (
                 <div style={{ marginTop: newsComparisonTickers.length > 1 ? 10 : 0 }}>
@@ -1142,20 +1136,14 @@ function CompanySection({
                 {industry_peer_theme ? `Industry · ${industry_peer_theme}` : 'Industry'}
               </p>
               {indComparisonTickers.length > 1 && (
-                <div style={{
-                  border: isMobile ? '1px solid var(--ink-6)' : 'none',
-                  borderRadius: isMobile ? 4 : 0,
-                  padding: isMobile ? '8px' : 0,
-                }}>
-                  <PeerComparisonChart
-                    selectedTicker={ticker.ticker}
-                    comparisonTickers={indComparisonTickers}
-                    peerNames={allPeerNames}
-                    allPricesData={allPricesData}
-                    allSentimentData={allSentimentData}
-                    isMobile={isMobile}
-                  />
-                </div>
+                <PeerComparisonChart
+                  selectedTicker={ticker.ticker}
+                  comparisonTickers={indComparisonTickers}
+                  peerNames={allPeerNames}
+                  allPricesData={allPricesData}
+                  allSentimentData={allSentimentData}
+                  isMobile={isMobile}
+                />
               )}
               {indPeersBadgeOnly.length > 0 && (
                 <div style={{ marginTop: indComparisonTickers.length > 1 ? 10 : 0 }}>
