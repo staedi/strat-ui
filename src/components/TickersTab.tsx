@@ -141,7 +141,7 @@ function PriceChart({ points }: { points: PricePoint[] }) {
   return (
     <div>
       {/* Section label + stats */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: isMobile ? 2 : 6, flexWrap: 'nowrap' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: isMobile ? 4 : 6, flexWrap: 'nowrap' }}>
         <p style={SECTION_LABEL}>Price</p>
         <span style={{
           fontSize: 14, fontWeight: 700, color: 'var(--ink)',
@@ -212,7 +212,7 @@ function VolumeChart({ points }: { points: PricePoint[] }) {
   return (
     <div>
       {/* Section label + stats */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: isMobile ? 2 : 6, flexWrap: 'nowrap' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: isMobile ? 4 : 6, flexWrap: 'nowrap' }}>
         <p style={SECTION_LABEL}>Volume</p>
         <span style={{
           fontSize: 14, fontWeight: 700, color: 'var(--ink)',
@@ -1097,14 +1097,20 @@ function CompanySection({
             <div>
               <p style={SUBLABEL}>News</p>
               {newsComparisonTickers.length > 1 && (
-                <PeerComparisonChart
-                  selectedTicker={ticker.ticker}
-                  comparisonTickers={newsComparisonTickers}
-                  peerNames={allPeerNames}
-                  allPricesData={allPricesData}
-                  allSentimentData={allSentimentData}
-                  isMobile={isMobile}
-                />
+                <div style={{
+                  border: isMobile ? '1px solid var(--ink-6)' : 'none',
+                  borderRadius: isMobile ? 4 : 0,
+                  padding: isMobile ? '8px' : 0,
+                }}>
+                  <PeerComparisonChart
+                    selectedTicker={ticker.ticker}
+                    comparisonTickers={newsComparisonTickers}
+                    peerNames={allPeerNames}
+                    allPricesData={allPricesData}
+                    allSentimentData={allSentimentData}
+                    isMobile={isMobile}
+                  />
+                </div>
               )}
               {newsPeersBadgeOnly.length > 0 && (
                 <div style={{ marginTop: newsComparisonTickers.length > 1 ? 10 : 0 }}>
@@ -1136,14 +1142,20 @@ function CompanySection({
                 {industry_peer_theme ? `Industry · ${industry_peer_theme}` : 'Industry'}
               </p>
               {indComparisonTickers.length > 1 && (
-                <PeerComparisonChart
-                  selectedTicker={ticker.ticker}
-                  comparisonTickers={indComparisonTickers}
-                  peerNames={allPeerNames}
-                  allPricesData={allPricesData}
-                  allSentimentData={allSentimentData}
-                  isMobile={isMobile}
-                />
+                <div style={{
+                  border: isMobile ? '1px solid var(--ink-6)' : 'none',
+                  borderRadius: isMobile ? 4 : 0,
+                  padding: isMobile ? '8px' : 0,
+                }}>
+                  <PeerComparisonChart
+                    selectedTicker={ticker.ticker}
+                    comparisonTickers={indComparisonTickers}
+                    peerNames={allPeerNames}
+                    allPricesData={allPricesData}
+                    allSentimentData={allSentimentData}
+                    isMobile={isMobile}
+                  />
+                </div>
               )}
               {indPeersBadgeOnly.length > 0 && (
                 <div style={{ marginTop: indComparisonTickers.length > 1 ? 10 : 0 }}>
