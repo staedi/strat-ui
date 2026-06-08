@@ -800,7 +800,7 @@ function PeerComparisonChart({
 
   const badgeW = isMobile ? 36 : 44
   const pctW = isMobile ? 36 : 44
-  const spacerW = isMobile ? 4 : 12
+  const spacerW = isMobile ? 0 : 12
   const sentBarW = isMobile ? 70 : 90
   const sentPctW = isMobile ? 42 : 44
 
@@ -816,7 +816,6 @@ function PeerComparisonChart({
           <span style={{ width: badgeW, flexShrink: 0 }} />
           <span style={{ flex: 1 }} />
           <span style={{ width: pctW, fontSize: 9, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
-          <span style={{ width: spacerW, flexShrink: 0 }} />
           <span style={{ width: sentPctW, fontSize: 9, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
         </div>
       ) : (
@@ -930,8 +929,8 @@ function PeerComparisonChart({
                 {change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(1)}%` : '—'}
               </span>
 
-              {/* Spacer between price and sentiment */}
-              <span style={{ flexShrink: 0, width: spacerW }} />
+              {/* Spacer between price and sentiment — desktop only */}
+              {!isMobile && <span style={{ flexShrink: 0, width: spacerW }} />}
 
               {/* Sentiment split bar — hidden on mobile */}
               {!isMobile && (
