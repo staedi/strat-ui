@@ -798,6 +798,12 @@ function PeerComparisonChart({
   // Zero baseline y position (shared)
   const baselineY = SH - ((0 - yMin) / yRange) * SH
 
+  const badgeW = isMobile ? 36 : 44
+  const pctW = isMobile ? 36 : 44
+  const spacerW = isMobile ? 6 : 12
+  const sentBarW = isMobile ? 70 : 90
+  const sentPctW = isMobile ? 36 : 44
+
   return (
     <div>
       {/* Column headers */}
@@ -806,13 +812,13 @@ function PeerComparisonChart({
         padding: '0 0 6px', borderBottom: '1px solid var(--ink-6)',
         marginBottom: 4,
       }}>
-        <span style={{ width: 44, flexShrink: 0 }} />
+        <span style={{ width: badgeW, flexShrink: 0 }} />
         {!isMobile && <span style={{ flex: '0 0 120px' }} />}
         <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
-        <span style={{ width: 44, flexShrink: 0 }} />
-        <span style={{ width: 12, flexShrink: 0 }} />
-        <span style={{ width: 90, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
-        <span style={{ width: 44, flexShrink: 0 }} />
+        <span style={{ width: pctW, flexShrink: 0 }} />
+        <span style={{ width: spacerW, flexShrink: 0 }} />
+        <span style={{ width: sentBarW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
+        <span style={{ width: sentPctW, flexShrink: 0 }} />
       </div>
 
       {/* Rows */}
@@ -845,7 +851,7 @@ function PeerComparisonChart({
             }}>
               {/* Ticker badge */}
               <span style={{
-                flexShrink: 0, width: 44, textAlign: 'center',
+                flexShrink: 0, width: badgeW, textAlign: 'center',
                 fontSize: 10, fontWeight: 700, padding: '2px 4px', borderRadius: 4,
                 background: isSelected ? color : 'var(--ink-6)',
                 color: isSelected ? '#fff' : 'var(--ink-3)',
@@ -899,7 +905,7 @@ function PeerComparisonChart({
 
               {/* Price % change */}
               <span style={{
-                flexShrink: 0, width: 44, textAlign: 'right',
+                flexShrink: 0, width: pctW, textAlign: 'right',
                 fontSize: 11, fontWeight: 600, color: changeColor,
                 fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
               }}>
@@ -907,10 +913,10 @@ function PeerComparisonChart({
               </span>
 
               {/* Spacer between price and sentiment */}
-              <span style={{ flexShrink: 0, width: 12 }} />
+              <span style={{ flexShrink: 0, width: spacerW }} />
 
               {/* Sentiment split bar — midpoint at 0, fills right for positive, left for negative */}
-              <div style={{ flexShrink: 0, width: 90, height: 14, position: 'relative' }}>
+              <div style={{ flexShrink: 0, width: sentBarW, height: 14, position: 'relative' }}>
                 {hasSentiment && score !== null ? (
                   <>
                     <div style={{
@@ -950,7 +956,7 @@ function PeerComparisonChart({
 
               {/* Sentiment score — signed %, matches Overview tab */}
               <span style={{
-                flexShrink: 0, width: 44, textAlign: 'right',
+                flexShrink: 0, width: sentPctW, textAlign: 'right',
                 fontSize: 11, fontWeight: 600, color: sentColor,
                 fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
               }}>
