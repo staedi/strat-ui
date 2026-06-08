@@ -875,7 +875,7 @@ function PeerComparisonChart({
               )}
 
               {/* Sparkline — shared y-scale */}
-              <div style={{ flex: 1, minWidth: 120 }}>
+              <div style={{ flex: 1, minWidth: isMobile ? 60 : 120 }}>
                 {hasPrice ? (
                   <svg width="100%" viewBox={`0 0 ${SW} ${SH}`}
                     preserveAspectRatio="none"
