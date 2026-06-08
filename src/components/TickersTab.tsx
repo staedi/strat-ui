@@ -809,7 +809,7 @@ function PeerComparisonChart({
       {/* Column headers */}
       {isMobile ? (
         <div style={{
-          display: 'flex', alignItems: 'center',
+          display: 'flex', alignItems: 'center', gap: 8,
           padding: '0 0 6px', borderBottom: '1px solid var(--ink-6)',
           marginBottom: 4,
         }}>
@@ -873,21 +873,20 @@ function PeerComparisonChart({
                 {t}
               </span>
 
-              {/* Company name — hidden on mobile */}
-              {!isMobile && (
-                <span style={{
-                  flex: '0 0 120px', fontSize: 11,
-                  color: isSelected ? 'var(--ink-2)' : 'var(--ink-4)',
-                  fontWeight: isSelected ? 500 : 400,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  fontFamily: 'var(--font-ui)',
-                }}>
-                  {peerNames[t] ?? ''}
-                </span>
-              )}
+              {/* Company name */}
+              <span style={{
+                flex: isMobile ? '1 1 0' : '0 0 120px', minWidth: 0,
+                fontSize: isMobile ? 10 : 11,
+                color: isSelected ? 'var(--ink-2)' : 'var(--ink-4)',
+                fontWeight: isSelected ? 500 : 400,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontFamily: 'var(--font-ui)',
+              }}>
+                {peerNames[t] ?? ''}
+              </span>
 
-              {/* Sparkline — desktop only; mobile shows price % inline */}
-              {!isMobile ? (
+              {/* Sparkline — desktop only */}
+              {!isMobile && (
                 <div style={{ flex: 1, minWidth: 120 }}>
                   {hasPrice ? (
                     <svg width="100%" viewBox={`0 0 ${SW} ${SH}`}
@@ -916,13 +915,11 @@ function PeerComparisonChart({
                     </div>
                   )}
                 </div>
-              ) : (
-                <span style={{ flex: 1 }} />
               )}
 
               {/* Price % change */}
               <span style={{
-                flexShrink: 0, width: pctW, textAlign: 'right',
+                flexShrink: 0, width: pctW, textAlign: 'center',
                 fontSize: 11, fontWeight: 600, color: changeColor,
                 fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
               }}>
@@ -975,7 +972,7 @@ function PeerComparisonChart({
 
               {/* Sentiment score — signed %, matches Overview tab */}
               <span style={{
-                flexShrink: 0, width: sentPctW, textAlign: 'right',
+                flexShrink: 0, width: sentPctW, textAlign: isMobile ? 'center' : 'right',
                 fontSize: 11, fontWeight: 600, color: sentColor,
                 fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
               }}>
