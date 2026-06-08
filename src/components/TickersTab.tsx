@@ -807,23 +807,33 @@ function PeerComparisonChart({
   return (
     <div>
       {/* Column headers */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '0 0 6px', borderBottom: '1px solid var(--ink-6)',
-        marginBottom: 4,
-      }}>
-        <span style={{ width: badgeW, flexShrink: 0 }} />
-        {!isMobile && <span style={{ flex: '0 0 120px' }} />}
-        {!isMobile && <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>}
-        {isMobile && <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: sentPctW }}>
+      {isMobile ? (
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          padding: '0 0 6px', borderBottom: '1px solid var(--ink-6)',
+          marginBottom: 4,
+        }}>
+          <span style={{ width: badgeW, flexShrink: 0 }} />
+          <span style={{ flex: 1 }} />
           <span style={{ width: pctW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
+          <span style={{ width: spacerW, flexShrink: 0 }} />
           <span style={{ width: sentPctW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
-        </div>}
-        {!isMobile && <span style={{ width: pctW, flexShrink: 0 }} />}
-        {!isMobile && <span style={{ width: spacerW, flexShrink: 0 }} />}
-        {!isMobile && <span style={{ width: sentBarW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>}
-        {!isMobile && <span style={{ width: sentPctW, flexShrink: 0 }} />}
-      </div>
+        </div>
+      ) : (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '0 0 6px', borderBottom: '1px solid var(--ink-6)',
+          marginBottom: 4,
+        }}>
+          <span style={{ width: badgeW, flexShrink: 0 }} />
+          <span style={{ flex: '0 0 120px' }} />
+          <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
+          <span style={{ width: pctW, flexShrink: 0 }} />
+          <span style={{ width: spacerW, flexShrink: 0 }} />
+          <span style={{ width: sentBarW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
+          <span style={{ width: sentPctW, flexShrink: 0 }} />
+        </div>
+      )}
 
       {/* Rows */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -908,7 +918,7 @@ function PeerComparisonChart({
                   )}
                 </div>
               ) : (
-                <div style={{ flex: 1 }} />
+                <span style={{ flex: 1 }} />
               )}
 
               {/* Price % change */}
@@ -920,8 +930,8 @@ function PeerComparisonChart({
                 {change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(1)}%` : '—'}
               </span>
 
-              {/* Spacer between price and sentiment — hidden on mobile (no bar) */}
-              {!isMobile && <span style={{ flexShrink: 0, width: spacerW }} />}
+              {/* Spacer between price and sentiment */}
+              <span style={{ flexShrink: 0, width: spacerW }} />
 
               {/* Sentiment split bar — hidden on mobile */}
               {!isMobile && (
