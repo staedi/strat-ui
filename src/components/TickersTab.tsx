@@ -814,12 +814,11 @@ function PeerComparisonChart({
       }}>
         <span style={{ width: badgeW, flexShrink: 0 }} />
         {!isMobile && <span style={{ flex: '0 0 120px' }} />}
-        <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
-        <span style={{ width: pctW, flexShrink: 0 }} />
+        {!isMobile && <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>}
+        <span style={{ width: pctW, flexShrink: 0, fontSize: isMobile ? 10 : 0, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'right' }}>{isMobile ? 'Price' : ''}</span>
         {!isMobile && <span style={{ width: spacerW, flexShrink: 0 }} />}
         {!isMobile && <span style={{ width: sentBarW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>}
-        {isMobile && <span style={{ width: sentPctW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'right' }}>Sent.</span>}
-        {!isMobile && <span style={{ width: sentPctW, flexShrink: 0 }} />}
+        <span style={{ width: sentPctW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'right' }}>Sent.</span>
       </div>
 
       {/* Rows */}
@@ -874,35 +873,39 @@ function PeerComparisonChart({
                 </span>
               )}
 
-              {/* Sparkline — shared y-scale */}
-              <div style={{ flex: 1, minWidth: isMobile ? 60 : 120 }}>
-                {hasPrice ? (
-                  <svg width="100%" viewBox={`0 0 ${SW} ${SH}`}
-                    preserveAspectRatio="none"
-                    style={{ display: 'block', height: SH }}>
-                    <line x1={0} y1={baselineY.toFixed(1)} x2={SW} y2={baselineY.toFixed(1)}
-                      stroke="var(--ink-5)" strokeWidth={0.6} strokeDasharray="2 2" />
-                    <path
-                      d={makeSparkPath(priceLine!.pct)}
-                      fill="none"
-                      stroke={color}
-                      strokeWidth={isSelected ? 1.75 : 1.25}
-                      strokeOpacity={isSelected ? 1 : 0.6}
-                      strokeLinejoin="round" strokeLinecap="round"
-                    />
-                    <circle
-                      cx={SW}
-                      cy={(SH - ((priceLine!.pct[priceLine!.pct.length - 1] - yMin) / yRange) * SH).toFixed(1)}
-                      r={isSelected ? 2.5 : 1.75} fill={color}
-                      opacity={isSelected ? 1 : 0.7}
-                    />
-                  </svg>
-                ) : (
-                  <div style={{ height: SH, display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>—</span>
-                  </div>
-                )}
-              </div>
+              {/* Sparkline — desktop only; mobile shows price % inline */}
+              {!isMobile ? (
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  {hasPrice ? (
+                    <svg width="100%" viewBox={`0 0 ${SW} ${SH}`}
+                      preserveAspectRatio="none"
+                      style={{ display: 'block', height: SH }}>
+                      <line x1={0} y1={baselineY.toFixed(1)} x2={SW} y2={baselineY.toFixed(1)}
+                        stroke="var(--ink-5)" strokeWidth={0.6} strokeDasharray="2 2" />
+                      <path
+                        d={makeSparkPath(priceLine!.pct)}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={isSelected ? 1.75 : 1.25}
+                        strokeOpacity={isSelected ? 1 : 0.6}
+                        strokeLinejoin="round" strokeLinecap="round"
+                      />
+                      <circle
+                        cx={SW}
+                        cy={(SH - ((priceLine!.pct[priceLine!.pct.length - 1] - yMin) / yRange) * SH).toFixed(1)}
+                        r={isSelected ? 2.5 : 1.75} fill={color}
+                        opacity={isSelected ? 1 : 0.7}
+                      />
+                    </svg>
+                  ) : (
+                    <div style={{ height: SH, display: 'flex', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>—</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ flex: 1 }} />
+              )}
 
               {/* Price % change */}
               <span style={{
