@@ -816,9 +816,10 @@ function PeerComparisonChart({
         {!isMobile && <span style={{ flex: '0 0 120px' }} />}
         <span style={{ flex: 1, minWidth: SW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
         <span style={{ width: pctW, flexShrink: 0 }} />
-        <span style={{ width: spacerW, flexShrink: 0 }} />
-        <span style={{ width: sentBarW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
-        <span style={{ width: sentPctW, flexShrink: 0 }} />
+        {!isMobile && <span style={{ width: spacerW, flexShrink: 0 }} />}
+        {!isMobile && <span style={{ width: sentBarW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>}
+        {isMobile && <span style={{ width: sentPctW, flexShrink: 0, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'right' }}>Sent.</span>}
+        {!isMobile && <span style={{ width: sentPctW, flexShrink: 0 }} />}
       </div>
 
       {/* Rows */}
@@ -912,47 +913,49 @@ function PeerComparisonChart({
                 {change !== null ? `${change >= 0 ? '+' : ''}${change.toFixed(1)}%` : '—'}
               </span>
 
-              {/* Spacer between price and sentiment */}
-              <span style={{ flexShrink: 0, width: spacerW }} />
+              {/* Spacer between price and sentiment — hidden on mobile (no bar) */}
+              {!isMobile && <span style={{ flexShrink: 0, width: spacerW }} />}
 
-              {/* Sentiment split bar — midpoint at 0, fills right for positive, left for negative */}
-              <div style={{ flexShrink: 0, width: sentBarW, height: 14, position: 'relative' }}>
-                {hasSentiment && score !== null ? (
-                  <>
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      background: 'var(--ink-6)', borderRadius: 2,
-                    }} />
-                    <div style={{
-                      position: 'absolute', left: '50%', top: 0, bottom: 0,
-                      width: 1, background: 'var(--ink-4)',
-                    }} />
-                    {isPositive ? (
+              {/* Sentiment split bar — hidden on mobile */}
+              {!isMobile && (
+                <div style={{ flexShrink: 0, width: sentBarW, height: 14, position: 'relative' }}>
+                  {hasSentiment && score !== null ? (
+                    <>
                       <div style={{
-                        position: 'absolute',
-                        left: '50%', top: 0, bottom: 0,
-                        width: `${Math.abs(score) * 50}%`,
-                        background: '#5ec98b',
-                        opacity: isSelected ? 0.9 : 0.6,
-                        borderRadius: '0 2px 2px 0',
+                        position: 'absolute', inset: 0,
+                        background: 'var(--ink-6)', borderRadius: 2,
                       }} />
-                    ) : (
                       <div style={{
-                        position: 'absolute',
-                        right: '50%', top: 0, bottom: 0,
-                        width: `${Math.abs(score) * 50}%`,
-                        background: '#e06c75',
-                        opacity: isSelected ? 0.9 : 0.6,
-                        borderRadius: '2px 0 0 2px',
+                        position: 'absolute', left: '50%', top: 0, bottom: 0,
+                        width: 1, background: 'var(--ink-4)',
                       }} />
-                    )}
-                  </>
-                ) : (
-                  <div style={{ height: 14, display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, color: 'var(--ink-5)' }}>—</span>
-                  </div>
-                )}
-              </div>
+                      {isPositive ? (
+                        <div style={{
+                          position: 'absolute',
+                          left: '50%', top: 0, bottom: 0,
+                          width: `${Math.abs(score) * 50}%`,
+                          background: '#5ec98b',
+                          opacity: isSelected ? 0.9 : 0.6,
+                          borderRadius: '0 2px 2px 0',
+                        }} />
+                      ) : (
+                        <div style={{
+                          position: 'absolute',
+                          right: '50%', top: 0, bottom: 0,
+                          width: `${Math.abs(score) * 50}%`,
+                          background: '#e06c75',
+                          opacity: isSelected ? 0.9 : 0.6,
+                          borderRadius: '2px 0 0 2px',
+                        }} />
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ height: 14, display: 'flex', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, color: 'var(--ink-5)' }}>—</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Sentiment score — signed %, matches Overview tab */}
               <span style={{
