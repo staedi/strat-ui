@@ -800,9 +800,9 @@ function PeerComparisonChart({
 
   const badgeW = isMobile ? 36 : 44
   const pctW = isMobile ? 36 : 44
-  const spacerW = isMobile ? 6 : 12
+  const spacerW = isMobile ? 4 : 12
   const sentBarW = isMobile ? 70 : 90
-  const sentPctW = isMobile ? 36 : 44
+  const sentPctW = isMobile ? 42 : 44
 
   return (
     <div>
@@ -815,9 +815,9 @@ function PeerComparisonChart({
         }}>
           <span style={{ width: badgeW, flexShrink: 0 }} />
           <span style={{ flex: 1 }} />
-          <span style={{ width: pctW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
+          <span style={{ width: pctW, fontSize: 9, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Price</span>
           <span style={{ width: spacerW, flexShrink: 0 }} />
-          <span style={{ width: sentPctW, fontSize: 10, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
+          <span style={{ width: sentPctW, fontSize: 9, fontWeight: 600, color: 'var(--ink-4)', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-ui)', textAlign: 'center' }}>Sentiment</span>
         </div>
       ) : (
         <div style={{
