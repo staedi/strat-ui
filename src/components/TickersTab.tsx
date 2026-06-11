@@ -531,7 +531,7 @@ function TickerDetail({
 
         {tab === 'overview' && (<>
           {/* Price + Volume — side by side on desktop, stacked on mobile */}
-          {pricePoints.length > 0 && (
+          {pricePoints.length > 1 && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Price · Volume</span></p>
