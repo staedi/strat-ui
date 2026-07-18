@@ -131,6 +131,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
                 onClusterClick={handleClusterClick}
                 activeMeta={activeMeta}
                 onMetaClick={handleMetaClick}
+                panelOpen={!!selectedCluster}
               />
               <div style={{ position: 'absolute', bottom: 12, left: 16, fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
                 Updated {fmtDate(data.updated_at)}

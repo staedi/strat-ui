@@ -10,6 +10,7 @@ export interface ArticleNode {
 export interface TickerInfo { ticker: string; name: string; count?: number }
 export interface ClusterNode {
   cluster_id: number; name: string; count: number
+  summary?: string
   children: ArticleNode[]
   related_tickers?: TickerInfo[]
   ticker_summary?: Record<string, string>
@@ -25,7 +26,13 @@ export interface CirclePackingProps {
   data: TopicsData; width: number; height: number
   activeCluster?: number | null; onClusterClick?: (id: number) => void
   activeMeta?: string | null; onMetaClick?: (name: string) => void
+  panelOpen?: boolean
 }
+
+// Detail panel in TopicsTab.tsx is a fixed 320px overlay on the right — kept
+// in sync with that value so the tooltip knows when to flip sides instead of
+// rendering underneath it.
+const DETAIL_PANEL_WIDTH = 320
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -55,7 +62,11 @@ function fixEncoding(s: string) {
     .replace(/â€/g, '\u201D').replace(/â€"/g, '\u2013').replace(/â/g, '\u2019')
 }
 function truncate(s: string, n: number) {
-  const f = fixEncoding(s); return f.length > n ? f.slice(0, n - 1) + '…' : f
+  const f = fixEncoding(s)
+  if (f.length <= n) return f
+  const cut = f.slice(0, n - 1)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > n * 0.6 ? cut.slice(0, lastSpace) : cut) + '…'
 }
 function wrapLabel(label: string, maxChars: number): string[] {
   const words = label.split(' ')
@@ -76,6 +87,7 @@ export default function CirclePacking({
   data, width, height,
   activeCluster: extCluster, onClusterClick,
   activeMeta: extMeta, onMetaClick,
+  panelOpen = false,
 }: CirclePackingProps) {
   const [internalCluster, setInternalCluster] = useState<number | null>(null)
   const [internalMeta, setInternalMeta] = useState<string | null>(null)
@@ -105,10 +117,37 @@ export default function CirclePacking({
     const extra2El = el.querySelector('[data-tt="extra2"]') as HTMLElement
     if (extra2) { extra2El.textContent = extra2; extra2El.style.display = 'block' }
     else { extra2El.style.display = 'none' }
+
+    // Render left-anchored first and measure the *actual* box — content
+    // (e.g. a long ticker list line) can render wider than the CSS maxWidth
+    // budget suggests, so deciding the flip from an assumed width let real
+    // boxes still run under the detail panel. Measuring after layout is the
+    // only way to know the true footprint.
+    el.style.right = 'auto'
     el.style.left = `${x + 14}px`
     el.style.top = `${y - 10}px`
     el.style.display = 'block'
-  }, [])
+
+    const rect = el.getBoundingClientRect()
+    const rightBoundary = window.innerWidth - (panelOpen ? DETAIL_PANEL_WIDTH : 0) - 8
+    if (rect.right > rightBoundary) {
+      el.style.left = 'auto'
+      el.style.right = `${window.innerWidth - x + 14}px`
+      // A flipped box wide enough to also run off the left edge (cursor
+      // near the left side, unusually long content) falls back to
+      // left-anchored-at-the-edge rather than clipping off-screen.
+      if (el.getBoundingClientRect().left < 8) {
+        el.style.right = 'auto'
+        el.style.left = '8px'
+      }
+    }
+
+    const rect2 = el.getBoundingClientRect()
+    const bottomOverflow = rect2.bottom - (window.innerHeight - 8)
+    if (bottomOverflow > 0) {
+      el.style.top = `${Math.max(8, y - 10 - bottomOverflow)}px`
+    }
+  }, [panelOpen])
 
   const hideTooltip = useCallback(() => {
     if (tooltipRef.current) tooltipRef.current.style.display = 'none'
@@ -198,12 +237,13 @@ export default function CirclePacking({
               <g key={`c-${cd.cluster_id}`} style={{ cursor: 'pointer' }}
                 onClick={() => handleClusterClick(cd.cluster_id)}
                 onMouseEnter={e => {
-                  const named = cd.related_tickers ?? []
+                  const tickers = cd.related_tickers ?? []
                   showTooltip(
                     e.clientX, e.clientY,
                     fixEncoding(cd.name),
                     `${cd.count} article${cd.count !== 1 ? 's' : ''}`,
-                    named.length ? `Named: ${named.map(t => t.ticker).join('  ·  ')}` : undefined,
+                    cd.summary ? truncate(fixEncoding(cd.summary), 180) : undefined,
+                    tickers.length ? `Tickers: ${tickers.map(t => t.ticker).join('  ·  ')}` : undefined,
                   )
                 }}
                 onMouseLeave={hideTooltip}
@@ -244,7 +284,7 @@ export default function CirclePacking({
             const clusterOn = activeCluster === null || activeCluster === cd.cluster_id
             const on = metaOn && clusterOn
             return (
-              <circle key={`a-${art.hash || i}`}
+              <circle key={`a-${cd.cluster_id}-${art.hash || i}`}
                 cx={node.x} cy={node.y} r={Math.max(node.r, 2.5)}
                 fill={color} fillOpacity={on ? 0.65 : 0.08}
                 stroke={color} strokeWidth={0.5} strokeOpacity={on ? 0.25 : 0}
@@ -278,7 +318,7 @@ export default function CirclePacking({
         }} />
         <p data-tt="extra" style={{
           display: 'none', margin: '5px 0 0',
-          fontSize: 11, color: '#7986cb', fontFamily: "'DM Mono',monospace"
+          fontSize: 11.5, color: '#c9ccd6', fontFamily: "'DM Sans',system-ui", lineHeight: 1.4
         }} />
         <p data-tt="extra2" style={{
           display: 'none', margin: '3px 0 0',

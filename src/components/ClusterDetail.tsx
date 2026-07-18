@@ -55,6 +55,14 @@ export default function ClusterDetail({ cluster, meta, onClose, onTickerClick }:
             }}>
               {cluster.name.replace(/^"|"$/g, '')}
             </h3>
+            {cluster.summary && (
+              <p style={{
+                margin: '6px 0 0', fontSize: 12, fontWeight: 400,
+                color: 'var(--ink-3)', lineHeight: 1.45,
+              }}>
+                {cluster.summary}
+              </p>
+            )}
           </div>
           <button onClick={onClose} style={{
             border: 'none', background: 'transparent', cursor: 'pointer',
