@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { ClusterNode, MetaCategoryNode, TickerInfo } from './CirclePacking'
+import type { TickerSentiment } from '../hooks/useSentimentData'
+import { momentumLabel } from '../utils/momentum'
 
 const PALETTE = [
   '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
@@ -13,11 +15,18 @@ interface Props {
   meta: MetaCategoryNode
   onClose: () => void
   onTickerClick: (ticker: string) => void
+  // Whole-ticker momentum (export_sentiment_json.py, "full" mode only) —
+  // NOT scoped to this cluster. A ticker can show 🔥 here because it's
+  // surging overall while its mentions in THIS cluster are only part of
+  // that story; still the most useful "which ticker in this cluster is
+  // actually trending" signal available without per-(cluster,ticker) data.
+  tickerSentiment?: Record<string, TickerSentiment>
 }
 
-export default function ClusterDetail({ cluster, meta, onClose, onTickerClick }: Props) {
+export default function ClusterDetail({ cluster, meta, onClose, onTickerClick, tickerSentiment }: Props) {
   const [showAll, setShowAll] = useState(false)
   const color = clusterColor(cluster.cluster_id)
+  const momentum = momentumLabel(cluster.momentum, cluster.count)
 
   const tickers = useMemo(() => {
     const map = new Map<string, TickerInfo>()
@@ -72,9 +81,18 @@ export default function ClusterDetail({ cluster, meta, onClose, onTickerClick }:
         </div>
 
         {/* Stats */}
-        <div style={{ marginTop: 10, display: 'flex', gap: 20 }}>
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 20 }}>
           <Stat label="Articles" value={cluster.count} />
           <Stat label="Tickers" value={tickers.length} />
+          {momentum && (
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: 'var(--ink-2)',
+              background: 'var(--ink-6)', borderRadius: 12,
+              padding: '3px 9px', display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              {momentum.icon} {momentum.text}
+            </span>
+          )}
         </div>
       </div>
 
@@ -87,6 +105,8 @@ export default function ClusterDetail({ cluster, meta, onClose, onTickerClick }:
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {visible.map(t => {
             const summary = cluster.ticker_summary?.[t.ticker]
+            const tSentiment = tickerSentiment?.[t.ticker]
+            const mLabel = momentumLabel(tSentiment?.momentum, tSentiment?.total)
             return (
               <div key={t.ticker} style={{
                 padding: summary ? '8px 0' : '5px 0',
@@ -108,6 +128,9 @@ export default function ClusterDetail({ cluster, meta, onClose, onTickerClick }:
                       {t.name}
                     </span>
                   </button>
+                  {mLabel && (
+                    <span style={{ fontSize: 11, flexShrink: 0 }} title={mLabel.text}>{mLabel.icon}</span>
+                  )}
                 </div>
                 {summary && (
                   <p style={{ margin: '4px 0 0', fontSize: 11, fontWeight: 400, color: 'var(--ink-4)', lineHeight: 1.4 }}>

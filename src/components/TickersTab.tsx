@@ -7,6 +7,7 @@ import { useSentimentData } from '../hooks/useSentimentData'
 import type { TickerSentiment, SentimentDay, SentimentCluster } from '../hooks/useSentimentData'
 import { useCompanyData } from '../hooks/useCompanyData'
 import type { CompanyMeta } from '../hooks/useCompanyData'
+import { momentumLabel } from '../utils/momentum'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,6 +73,17 @@ function fmtDate(iso?: string): string {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZoneName: 'short' })
 }
 
+function fmtShort(iso?: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+const AXIS_LABEL: React.CSSProperties = {
+  fontSize: 10, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)',
+  fontVariantNumeric: 'tabular-nums',
+}
+
 const SECTION_LABEL: React.CSSProperties = {
   fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
   textTransform: 'uppercase' as const, color: 'var(--ink-4)',
@@ -83,6 +95,16 @@ const SECTION_STATS: React.CSSProperties = {
   fontVariantNumeric: 'tabular-nums',
 }
 
+function pickTicks<T>(arr: T[], count: number): T[] {
+  if (arr.length <= count) return arr
+  const ticks: T[] = []
+  for (let i = 0; i < count; i++) {
+    const idx = Math.round((i / (count - 1)) * (arr.length - 1))
+    ticks.push(arr[idx])
+  }
+  return ticks
+}
+
 function fmtVol(v: number): string {
   if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B'
   if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M'
@@ -92,17 +114,24 @@ function fmtVol(v: number): string {
 
 // ── Price chart ───────────────────────────────────────────────────────────────
 
-function periodLabel(dateFirst: string, dateLast: string): string {
+function periodLabel(dateFirst: string, dateLast: string, windowStart?: string): string {
   if (!dateFirst || !dateLast) return ''
   const msPerDay = 86400000
-  const days = Math.round((new Date(dateLast).getTime() - new Date(dateFirst).getTime()) / msPerDay)
+  const spanDays = Math.round((new Date(dateLast).getTime() - new Date(dateFirst).getTime()) / msPerDay)
+  // Sparse per-ticker data can span less than the actual configured window
+  // (e.g. no mentions/trades near the window edges) — anchoring to the
+  // real window_start avoids the label understating it, without hiding a
+  // genuinely wider span if one exists.
+  const windowDays = windowStart
+    ? Math.round((new Date(dateLast).getTime() - new Date(windowStart).getTime()) / msPerDay)
+    : 0
+  const days = Math.max(spanDays, windowDays)
   if (days <= 7) return '1w'
   if (days <= 14) return '2w'
-  if (days <= 31) return '1m'
-  return `${Math.round(days / 7)}w`
+  return `${Math.max(1, Math.round(days / 30))}m`
 }
 
-function PriceChart({ points }: { points: PricePoint[] }) {
+function PriceChart({ points, windowStart }: { points: PricePoint[]; windowStart?: string }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   React.useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 640)
@@ -121,7 +150,7 @@ function PriceChart({ points }: { points: PricePoint[] }) {
 
   const dateFirst = points[0]?.date ?? ''
   const dateLast = points[points.length - 1]?.date ?? ''
-  const period = periodLabel(dateFirst, dateLast)
+  const period = periodLabel(dateFirst, dateLast, windowStart)
 
   const minPrice = Math.min(...closes)
   const maxPrice = Math.max(...closes)
@@ -175,13 +204,20 @@ function PriceChart({ points }: { points: PricePoint[] }) {
           <circle cx={xs[xs.length - 1]} cy={ys[ys.length - 1]} r={2.5} fill={color} />
         </svg>
       </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+        {pickTicks(points, isMobile ? 3 : 5).map((p, i) => (
+          <span key={p.date} style={AXIS_LABEL}>
+            {fmtShort(i === 0 ? (windowStart ?? p.date) : p.date)}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
 
 // ── Volume chart ──────────────────────────────────────────────────────────────
 
-function VolumeChart({ points }: { points: PricePoint[] }) {
+function VolumeChart({ points, windowStart }: { points: PricePoint[]; windowStart?: string }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   React.useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 640)
@@ -203,7 +239,7 @@ function VolumeChart({ points }: { points: PricePoint[] }) {
 
   const dateFirst = points[0]?.date ?? ''
   const dateLast = points[points.length - 1]?.date ?? ''
-  const period = periodLabel(dateFirst, dateLast)
+  const period = periodLabel(dateFirst, dateLast, windowStart)
 
   const W = 600, H = 36
   const barW = Math.max(2, W / volumes.length - 2)
@@ -256,6 +292,13 @@ function VolumeChart({ points }: { points: PricePoint[] }) {
             )
           })}
         </svg>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+        {pickTicks(points, isMobile ? 3 : 5).map((p, i) => (
+          <span key={p.date} style={AXIS_LABEL}>
+            {fmtShort(i === 0 ? (windowStart ?? p.date) : p.date)}
+          </span>
+        ))}
       </div>
     </div>
   )
@@ -355,6 +398,8 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
             const hasSummary = t.clusters.some(c => c.summary)
             const hasPrice = !!pricesData?.prices[t.ticker]
             const hasCompany = !!companyData?.companies[t.ticker]
+            const tSentiment = sentimentDataFull?.tickers[t.ticker]
+            const mLabel = momentumLabel(tSentiment?.momentum, tSentiment?.total)
             return (
               <div
                 key={t.ticker}
@@ -392,6 +437,9 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
                 {/* Count + dots — hidden on mobile */}
                 {!isMobile && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                    {mLabel && (
+                      <span style={{ fontSize: 11 }} title={mLabel.text}>{mLabel.icon}</span>
+                    )}
                     {hasSummary && (
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-2)', display: 'inline-block' }} />
                     )}
@@ -430,6 +478,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
           <TickerDetail
             ticker={selectedTicker}
             pricePoints={pricesData?.prices[selectedTicker.ticker] ?? []}
+            pricesWindowStart={pricesData?.window_start}
             sentimentData={sentimentDataFull?.tickers[selectedTicker.ticker] ?? null}
             sentimentWindowStart={sentimentDataFull?.window_start}
             sentimentUpdatedAt={sentimentDataFull?.updated_at}
@@ -451,6 +500,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
 function TickerDetail({
   ticker,
   pricePoints,
+  pricesWindowStart,
   sentimentData,
   sentimentWindowStart,
   sentimentUpdatedAt,
@@ -463,6 +513,7 @@ function TickerDetail({
 }: {
   ticker: AggregatedTicker
   pricePoints: PricePoint[]
+  pricesWindowStart?: string
   sentimentData: TickerSentiment | null
   sentimentWindowStart?: string
   sentimentUpdatedAt?: string
@@ -519,10 +570,22 @@ function TickerDetail({
             ))}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 10 }}>
           <Stat label="Mentions" value={ticker.count} />
           <Stat label="Clusters" value={ticker.clusters.length} />
           <Stat label="Summaries" value={clustersWithSummary.length} />
+          {(() => {
+            const mLabel = momentumLabel(sentimentData?.momentum, sentimentData?.total)
+            return mLabel && (
+              <span style={{
+                fontSize: 11, fontWeight: 600, color: 'var(--ink-2)',
+                background: 'var(--ink-6)', borderRadius: 12,
+                padding: '3px 9px', display: 'flex', alignItems: 'center', gap: 4,
+              }}>
+                {mLabel.icon} {mLabel.text}
+              </span>
+            )
+          })()}
         </div>
       </div>
 
@@ -539,10 +602,10 @@ function TickerDetail({
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 280px', minWidth: 0 }}>
-                  <PriceChart points={pricePoints} />
+                  <PriceChart points={pricePoints} windowStart={pricesWindowStart} />
                 </div>
                 <div style={{ flex: '1 1 280px', minWidth: 0 }}>
-                  <VolumeChart points={pricePoints} />
+                  <VolumeChart points={pricePoints} windowStart={pricesWindowStart} />
                 </div>
               </div>
             </div>
@@ -610,8 +673,12 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
 
   // Build complete day range including N/A days
   const dailyMap = Object.fromEntries(daily.map(d => [d.date, d]))
+  // Anchored to the dataset's own window_start/updated_at, not this ticker's
+  // actual first/last mention — otherwise a ticker whose last mention is a
+  // few days stale gets a visibly shorter range than one mentioned today,
+  // even though every ticker in this export shares the same real window.
   const start = windowStart ? new Date(windowStart) : new Date(daily[0].date)
-  const end = daily.length > 0 ? new Date(daily[daily.length - 1].date) : new Date()
+  const end = updatedAt ? new Date(updatedAt) : new Date(daily[daily.length - 1].date)
   const allDays: Array<{ date: string; data: typeof daily[0] | null; isNA: boolean }> = []
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().slice(0, 10)
@@ -626,10 +693,13 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
 
   const maxVal = Math.max(...daily.map(d => Math.max(d.pos, d.neg)), 1)
 
-  const dateFirst = daily[0]?.date?.slice(5) ?? ''
-  const dateLast = daily[daily.length - 1]?.date?.slice(5) ?? ''
-  const days = Math.round((new Date(daily[daily.length - 1].date).getTime() - new Date(daily[0].date).getTime()) / 86400000)
-  const period = days <= 7 ? '1w' : days <= 14 ? '2w' : days <= 31 ? '1m' : `${Math.round(days / 7)}w`
+  const dateFirst = allDays[0]?.date ?? ''
+  const dateLast = allDays[allDays.length - 1]?.date ?? ''
+  // allDays already spans the real window_start (not just the dates that
+  // happen to have mentions) — use its length so sparse tickers don't get
+  // a shorter label than tickers with denser coverage of the same window.
+  const days = allDays.length - 1
+  const period = days <= 7 ? '1w' : days <= 14 ? '2w' : `${Math.max(1, Math.round(days / 30))}m`
 
   // Top clusters sorted by total desc
   const topClusters = [...(clusters ?? [])].filter(c => c.total >= 2).sort((a, b) => b.total - a.total).slice(0, 4)
@@ -658,7 +728,7 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
       </div>
 
       {/* Daily bar chart */}
-      <div style={{ background: 'var(--ink-7)', borderRadius: 4, padding: '4px 0', marginBottom: 10 }}>
+      <div style={{ background: 'var(--ink-7)', borderRadius: 4, padding: '4px 0' }}>
         <svg width='100%' viewBox={`0 0 ${W} ${H}`} preserveAspectRatio='none'
           style={{ display: 'block', height: H }}>
           {/* Baseline */}
@@ -687,6 +757,11 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
             )
           })}
         </svg>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, marginBottom: 10 }}>
+        {pickTicks(allDays, 5).map(d => (
+          <span key={d.date} style={AXIS_LABEL}>{fmtShort(d.date)}</span>
+        ))}
       </div>
 
       {/* Cluster breakdown */}

@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback, useRef } from 'react'
 import { hierarchy, pack } from 'd3-hierarchy'
+import { momentumLabel } from '../utils/momentum'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,12 @@ export interface ClusterNode {
   related_tickers?: TickerInfo[]
   ticker_summary?: Record<string, string>
   ticker_context?: Record<string, string[]>
+  // Recent-vs-baseline activity ratio — only populated in "full" mode
+  // (see export_topics_json.py build_hierarchy). null means all of this
+  // cluster's activity is inside the recent window, so there's no
+  // baseline to compare against ("new").
+  momentum?: number | null
+  recent_count?: number
 }
 export interface MetaCategoryNode {
   name: string; count: number; children: ClusterNode[]
@@ -238,10 +245,13 @@ export default function CirclePacking({
                 onClick={() => handleClusterClick(cd.cluster_id)}
                 onMouseEnter={e => {
                   const tickers = cd.related_tickers ?? []
+                  const mLabel = momentumLabel(cd.momentum, cd.count)
+                  const sub = `${cd.count} article${cd.count !== 1 ? 's' : ''}`
+                    + (mLabel ? ` · ${mLabel.icon} ${mLabel.text}` : '')
                   showTooltip(
                     e.clientX, e.clientY,
                     fixEncoding(cd.name),
-                    `${cd.count} article${cd.count !== 1 ? 's' : ''}`,
+                    sub,
                     cd.summary ? truncate(fixEncoding(cd.summary), 180) : undefined,
                     tickers.length ? `Tickers: ${tickers.map(t => t.ticker).join('  ·  ')}` : undefined,
                   )
@@ -269,6 +279,13 @@ export default function CirclePacking({
                     fill={color} fillOpacity={on ? 0.4 : 0.12}
                     style={{ transition: 'fill-opacity 0.18s', pointerEvents: 'none', userSelect: 'none' }}
                   >{cd.count}</text>
+                )}
+                {show && momentumLabel(cd.momentum, cd.count) && (
+                  <text x={node.x + node.r * 0.6} y={node.y - node.r * 0.6}
+                    textAnchor="middle" fontSize={Math.min(15, Math.max(11, node.r / 3.5))}
+                    fillOpacity={on ? 1 : 0.3}
+                    style={{ transition: 'fill-opacity 0.18s', pointerEvents: 'none', userSelect: 'none' }}
+                  >{momentumLabel(cd.momentum, cd.count)!.icon}</text>
                 )}
               </g>
             )

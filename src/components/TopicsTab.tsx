@@ -3,6 +3,7 @@ import CirclePacking from './CirclePacking'
 import type { ClusterNode, MetaCategoryNode } from './CirclePacking'
 import ClusterDetail from './ClusterDetail'
 import { useTopicsData } from '../hooks/useTopicsData'
+import { useSentimentData } from '../hooks/useSentimentData'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ function fmtDate(iso?: string): string {
 
 export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeChange }: Props) {
   const { data, loading, error } = useTopicsData(mode)
+  const { data: sentimentData } = useSentimentData(mode)
   const [activeCluster, setActiveCluster] = useState<number | null>(initialCluster ?? null)
   const [activeMeta, setActiveMeta] = useState<string | null>(null)
   const [selectedCluster, setSelectedCluster] = useState<ClusterNode | null>(null)
@@ -153,6 +155,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
               meta={selectedMeta}
               onClose={() => { setSelectedCluster(null); setSelectedMeta(null); setActiveCluster(null) }}
               onTickerClick={onTickerClick}
+              tickerSentiment={sentimentData?.tickers}
             />
           </div>
         )}

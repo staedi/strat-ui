@@ -45,6 +45,11 @@ export interface TickerSentiment {
     score: number
     daily: SentimentDay[]
     clusters: SentimentCluster[]
+    // Recent-vs-baseline activity ratio — only populated in "full" mode
+    // (see export_sentiment_json.py aggregate()). null means all of this
+    // ticker's mentions are inside the recent window ("new").
+    momentum?: number | null
+    recent_count?: number
 }
 
 export interface SentimentData {
