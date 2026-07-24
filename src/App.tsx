@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import TopicsTab from './components/TopicsTab'
 import TickersTab from './components/TickersTab'
+import BriefingTab from './components/BriefingTab'
 
-type Tab = 'topics' | 'tickers'
+type Tab = 'briefing' | 'topics' | 'tickers'
 type Mode = 'recent' | 'full'
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'briefing', label: 'Briefing' },
   { id: 'topics', label: 'Topics' },
   { id: 'tickers', label: 'Tickers' },
+
 ]
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('topics')
+  const [tab, setTab] = useState<Tab>('briefing')
   const [mode, setMode] = useState<Mode>('recent')
   const [activeTicker, setActiveTicker] = useState<string | null>(null)
   const [activeCluster, setActiveCluster] = useState<number | null>(null)
@@ -62,8 +65,13 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Recent / Full toggle — shared across Topics and Tickers tabs */}
-        <div style={{ display: 'flex', gap: 2, background: 'var(--ink-6)', borderRadius: 'var(--radius-sm)', padding: 2 }}>
+        {/* Recent/Full toggle — invisible on Briefing, but always occupies space */}
+        <div style={{
+          display: 'flex', gap: 2,
+          background: tab === 'briefing' ? 'transparent' : 'var(--ink-6)',
+          borderRadius: 'var(--radius-sm)', padding: 2,
+          visibility: tab === 'briefing' ? 'hidden' : 'visible',  // hidden not display:none
+        }}>
           {(['recent', 'full'] as Mode[]).map(m => (
             <button key={m} onClick={() => setMode(m)} style={{
               padding: '3px 12px', borderRadius: 4, border: 'none',
@@ -81,6 +89,12 @@ export default function App() {
       </header>
 
       <main style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {tab === 'briefing' && (
+          <BriefingTab
+            onTickerClick={navigateToTicker}
+            onClusterClick={navigateToCluster}
+          />
+        )}
         {tab === 'topics' && (
           <TopicsTab
             onTickerClick={navigateToTicker}
