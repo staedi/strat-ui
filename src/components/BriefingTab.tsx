@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useBriefingData } from '../hooks/useBriefingData'
+import { useTopicsData } from '../hooks/useTopicsData'
+import { aggregateTickers } from './TickersTab'
 import SnapshotSection from './SnapshotSection'
 import MacroTable from './MacroTable'
 import MoversSection from './MoversSection'
@@ -9,6 +11,7 @@ export interface ScheduleEntry {
     date: string
     type: string
     label: string
+    ticker?: string
 }
 
 export interface TrendPoint {
@@ -102,10 +105,20 @@ function fmtDate(iso: string): string {
 interface Props {
     onTickerClick: (ticker: string) => void
     onClusterClick: (clusterId: number) => void
+    mode: 'recent' | 'full'
 }
 
-export default function BriefingTab({ onTickerClick, onClusterClick }: Props) {
+export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Props) {
     const { data, loading, error } = useBriefingData()
+    // Ground truth for "does this ticker have a Tickers-tab page": the same
+    // aggregation TickersTab itself uses (related_tickers across topics_{mode}.json
+    // clusters) — not briefing.json's own by_news/by_price lists, which are
+    // independently-generated and can disagree with it.
+    const { data: topicsData } = useTopicsData(mode)
+    const availableTickers = useMemo(
+        () => new Set(topicsData ? aggregateTickers(topicsData).map(t => t.ticker) : []),
+        [topicsData]
+    )
 
     if (loading) {
         return (
@@ -153,8 +166,14 @@ export default function BriefingTab({ onTickerClick, onClusterClick }: Props) {
                 </p>
             </div>
 
-            {/* Schedule strip */}
-            <ScheduleStrip entries={data.schedule} />
+            {/* Schedule strip — recently-debuted tickers render as chips
+                alongside the upcoming pills, rather than a separate card */}
+            <ScheduleStrip
+                entries={data.schedule}
+                recentDebuts={data.movers.debuts}
+                availableTickers={availableTickers}
+                onTickerClick={onTickerClick}
+            />
 
             {/* Snapshot card */}
             <div style={{
@@ -180,7 +199,7 @@ export default function BriefingTab({ onTickerClick, onClusterClick }: Props) {
                 <MoversSection
                     byNews={data.movers.by_news}
                     byPrice={data.movers.by_price}
-                    debuts={data.movers.debuts}
+                    availableTickers={availableTickers}
                     onTickerClick={onTickerClick}
                     onClusterClick={onClusterClick}
                 />

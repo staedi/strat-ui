@@ -11,7 +11,7 @@ import { momentumLabel } from '../utils/momentum'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface AggregatedTicker {
+export interface AggregatedTicker {
   ticker: string
   name: string
   count: number
@@ -35,7 +35,7 @@ function clusterColor(id: number) { return PALETTE[id % PALETTE.length] }
 
 // ── Aggregation ───────────────────────────────────────────────────────────────
 
-function aggregateTickers(data: TopicsData): AggregatedTicker[] {
+export function aggregateTickers(data: TopicsData): AggregatedTicker[] {
   const map = new Map<string, AggregatedTicker>()
 
   for (const meta of data.children) {

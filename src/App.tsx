@@ -93,6 +93,7 @@ export default function App() {
           <BriefingTab
             onTickerClick={navigateToTicker}
             onClusterClick={navigateToCluster}
+            mode={mode}
           />
         )}
         {tab === 'topics' && (

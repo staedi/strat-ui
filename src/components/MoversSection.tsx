@@ -1,4 +1,4 @@
-import type { NlpMovers, PriceMover, Debut } from './BriefingTab'
+import type { NlpMovers, PriceMover } from './BriefingTab'
 
 const UP_COLOR = '#5ec98b'
 const DOWN_COLOR = '#e06c75'
@@ -14,16 +14,13 @@ function formatPct(pct: number): string {
     return `${sign}${pct.toFixed(2)}%`
 }
 
-function formatDate(iso: string): string {
-    const d = new Date(iso)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-function TickerBadge({ ticker }: { ticker: string }) {
+function TickerBadge({ ticker, dim }: { ticker: string; dim?: boolean }) {
     return (
         <span style={{
             fontSize: 10, fontWeight: 700, padding: '2px 6px',
-            borderRadius: 4, background: 'var(--ink)', color: 'var(--white)',
+            borderRadius: 4,
+            background: dim ? 'var(--ink-4)' : 'var(--ink)',
+            color: 'var(--white)',
             flexShrink: 0, fontFamily: 'var(--font-mono)',
         }}>
             {ticker}
@@ -48,12 +45,12 @@ function ColumnHeader({ label }: { label: string }) {
 interface Props {
     byNews: NlpMovers
     byPrice: PriceMover[]
-    debuts: Debut[]
+    availableTickers: Set<string>
     onTickerClick: (ticker: string) => void
     onClusterClick: (clusterId: number) => void
 }
 
-export default function MoversSection({ byNews, byPrice, debuts, onTickerClick, onClusterClick }: Props) {
+export default function MoversSection({ byNews, byPrice, availableTickers, onTickerClick, onClusterClick }: Props) {
     return (
         <div>
             <p style={{
@@ -65,73 +62,78 @@ export default function MoversSection({ byNews, byPrice, debuts, onTickerClick, 
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
 
-                {/* By Coverage */}
+                {/* By Coverage — only navigate if ticker has a Tickers-tab page */}
                 <div>
                     <ColumnHeader label="By Coverage" />
-                    {byNews.top_tickers.map(t => (
-                        <div
-                            key={t.ticker}
-                            onClick={() => onTickerClick(t.ticker)}
-                            style={{
-                                display: 'flex', alignItems: 'center',
-                                padding: '9px 0', borderBottom: '1px solid var(--ink-6)',
-                                gap: 12, cursor: 'pointer',
-                            }}
-                        >
-                            <TickerBadge ticker={t.ticker} />
-                            <span style={{
-                                fontSize: 11, color: 'var(--ink-3)', flex: 1,
-                                // fontWeight: 500,
-                                fontFamily: 'var(--font-ui)',
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}>
-                                {t.name}
-                            </span>
-                            <span style={{ fontSize: 11, color: 'var(--ink-4)', flexShrink: 0, fontFamily: 'var(--font-ui)' }}>
-                                {t.mentions}×
-                            </span>
-                            <span style={{
-                                fontSize: 11, fontWeight: 600, flexShrink: 0,
-                                color: t.score >= 0 ? UP_COLOR : DOWN_COLOR,
-                                fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
-                            }}>
-                                {t.score >= 0 ? '+' : ''}{(t.score * 100).toFixed(0)}%
-                            </span>
-                        </div>
-                    ))}
+                    {byNews.top_tickers.map(t => {
+                        const isAvailable = availableTickers.has(t.ticker)
+                        return (
+                            <div
+                                key={t.ticker}
+                                onClick={isAvailable ? () => onTickerClick(t.ticker) : undefined}
+                                style={{
+                                    display: 'flex', alignItems: 'center',
+                                    padding: '9px 0', borderBottom: '1px solid var(--ink-6)',
+                                    gap: 12, cursor: isAvailable ? 'pointer' : 'default',
+                                }}
+                            >
+                                <TickerBadge ticker={t.ticker} />
+                                <span style={{
+                                    fontSize: 11, color: 'var(--ink-3)', flex: 1,
+                                    fontFamily: 'var(--font-ui)',
+                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>
+                                    {t.name}
+                                </span>
+                                <span style={{ fontSize: 11, color: 'var(--ink-4)', flexShrink: 0, fontFamily: 'var(--font-ui)' }}>
+                                    {t.mentions}×
+                                </span>
+                                <span style={{
+                                    fontSize: 11, fontWeight: 600, flexShrink: 0,
+                                    color: t.score >= 0 ? UP_COLOR : DOWN_COLOR,
+                                    fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
+                                }}>
+                                    {t.score >= 0 ? '+' : ''}{(t.score * 100).toFixed(0)}%
+                                </span>
+                            </div>
+                        )
+                    })}
                 </div>
 
-                {/* By Price */}
+                {/* By Price — only navigate if ticker has a Tickers-tab page */}
                 <div>
                     <ColumnHeader label="By Price" />
-                    {byPrice.map(m => (
-                        <div
-                            key={m.ticker}
-                            onClick={() => onTickerClick(m.ticker)}
-                            style={{
-                                display: 'flex', alignItems: 'center',
-                                padding: '9px 0', borderBottom: '1px solid var(--ink-6)',
-                                gap: 12, cursor: 'pointer',
-                            }}
-                        >
-                            <TickerBadge ticker={m.ticker} />
-                            <span style={{
-                                fontSize: 11, color: 'var(--ink-3)', flex: 1,
-                                // fontWeight: 500,
-                                fontFamily: 'var(--font-ui)',
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}>
-                                {m.name}
-                            </span>
-                            <span style={{
-                                fontSize: 12, fontWeight: 600, flexShrink: 0,
-                                color: changePctColor(m.change_pct),
-                                fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
-                            }}>
-                                {formatPct(m.change_pct)}
-                            </span>
-                        </div>
-                    ))}
+                    {byPrice.map(m => {
+                        const isAvailable = availableTickers.has(m.ticker)
+                        return (
+                            <div
+                                key={m.ticker}
+                                onClick={isAvailable ? () => onTickerClick(m.ticker) : undefined}
+                                style={{
+                                    display: 'flex', alignItems: 'center',
+                                    padding: '9px 0', borderBottom: '1px solid var(--ink-6)',
+                                    gap: 12,
+                                    cursor: isAvailable ? 'pointer' : 'default',
+                                }}
+                            >
+                                <TickerBadge ticker={m.ticker} />
+                                <span style={{
+                                    fontSize: 11, color: 'var(--ink-3)', flex: 1,
+                                    fontFamily: 'var(--font-ui)',
+                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>
+                                    {m.name}
+                                </span>
+                                <span style={{
+                                    fontSize: 12, fontWeight: 600, flexShrink: 0,
+                                    color: changePctColor(m.change_pct),
+                                    fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-ui)',
+                                }}>
+                                    {formatPct(m.change_pct)}
+                                </span>
+                            </div>
+                        )
+                    })}
                 </div>
 
                 {/* Trending Topics */}
@@ -162,43 +164,6 @@ export default function MoversSection({ byNews, byPrice, debuts, onTickerClick, 
                             </div>
                         </div>
                     ))}
-
-                    {debuts.length > 0 && (
-                        <>
-                            <p style={{
-                                fontSize: 10, fontWeight: 600, color: 'var(--ink-4)',
-                                letterSpacing: '0.05em', textTransform: 'uppercase',
-                                margin: '14px 0 2px', paddingBottom: 6,
-                                borderBottom: '1px solid var(--ink-5)',
-                                fontFamily: 'var(--font-ui)',
-                            }}>
-                                Recent Debuts
-                            </p>
-                            {debuts.map(d => (
-                                <div
-                                    key={d.ticker}
-                                    onClick={() => onTickerClick(d.ticker)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center',
-                                        padding: '9px 0', borderBottom: '1px solid var(--ink-6)',
-                                        gap: 12, cursor: 'pointer',
-                                    }}
-                                >
-                                    <TickerBadge ticker={d.ticker} />
-                                    <span style={{
-                                        fontSize: 12, color: 'var(--ink-2)', flex: 1,
-                                        fontFamily: 'var(--font-ui)',
-                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                    }}>
-                                        {d.name}
-                                    </span>
-                                    <span style={{ fontSize: 11, color: 'var(--ink-4)', flexShrink: 0, fontFamily: 'var(--font-ui)' }}>
-                                        {formatDate(d.debut_date)}
-                                    </span>
-                                </div>
-                            ))}
-                        </>
-                    )}
                 </div>
 
             </div>
