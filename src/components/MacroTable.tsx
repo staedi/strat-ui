@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { MacroOutcome, ScheduleEntry } from './BriefingTab'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -14,7 +15,6 @@ const TYPE_COLORS: Record<string, string> = {
 const CB_TYPES = new Set(['fed', 'ecb', 'boe', 'boj'])
 const UP_COLOR = '#5ec98b'
 const DOWN_COLOR = '#e06c75'
-
 const TODAY_ISO = new Date().toISOString().slice(0, 10)
 
 function formatDate(iso: string): string {
@@ -45,7 +45,7 @@ function deriveDirection(o: MacroOutcome): Direction {
     return null
 }
 
-function MacroRow({ o, schedule }: { o: MacroOutcome; schedule: ScheduleEntry[] }) {
+function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: ScheduleEntry[]; isMobile: boolean }) {
     const isCB = CB_TYPES.has(o.type)
     const direction = deriveDirection(o)
 
@@ -64,18 +64,78 @@ function MacroRow({ o, schedule }: { o: MacroOutcome; schedule: ScheduleEntry[] 
     const valueNum = match?.[1] ?? o.latest_value
     const valueUnit = match?.[2]?.trim() ?? ''
 
-    // Highlight pill if latest release was today
     const isToday = o.latest_date?.slice(0, 10) === TODAY_ISO
     const pillBg = isToday ? (TYPE_COLORS[o.type] ?? 'var(--ink)') : 'var(--ink-6)'
     const pillColor = isToday ? 'white' : 'var(--ink-3)'
 
+    if (isMobile) {
+        // Mobile: two-line layout
+        return (
+            <div style={{
+                padding: '8px 0', borderBottom: '1px solid var(--ink-6)',
+                fontFamily: 'var(--font-ui)',
+            }}>
+                {/* Line 1: pill + name + direction + value */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 6px',
+                        borderRadius: 3, background: pillBg,
+                        color: pillColor, minWidth: 40, textAlign: 'center',
+                        flexShrink: 0, fontFamily: 'var(--font-mono)',
+                    }}>
+                        {TYPE_LABELS[o.type] ?? o.type.toUpperCase()}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--ink-4)', flex: 1, minWidth: 0 }}>
+                        {o.name}
+                    </span>
+                    <span style={{ width: 20, flexShrink: 0, textAlign: 'center' }}>
+                        {showUp && <span style={{ fontSize: 12, fontWeight: 600, color: UP_COLOR }}>↑</span>}
+                        {showDown && <span style={{ fontSize: 12, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
+                        {showHold && (
+                            <span style={{
+                                fontSize: 8, fontWeight: 600, padding: '1px 4px',
+                                borderRadius: 3, background: 'var(--ink-6)',
+                                color: 'var(--ink-4)', letterSpacing: '0.04em',
+                            }}>HOLD</span>
+                        )}
+                    </span>
+                    <span style={{ flexShrink: 0 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
+                            {valueNum}
+                        </span>
+                        {valueUnit && (
+                            <span style={{ fontSize: 10, color: 'var(--ink-3)', marginLeft: 2 }}>{valueUnit}</span>
+                        )}
+                    </span>
+                </div>
+                {/* Line 2: Latest + Upcoming dates */}
+                <div style={{ display: 'flex', gap: 16, paddingLeft: 52 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Latest</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-2)' }}>
+                            {formatDate(o.latest_date)}
+                        </span>
+                    </span>
+                    {scheduled && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Upcoming</span>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
+                                {scheduled}
+                            </span>
+                        </span>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    // Desktop: single row
     return (
         <div style={{
             display: 'flex', alignItems: 'center',
             padding: '9px 0', borderBottom: '1px solid var(--ink-6)',
             gap: 12, fontFamily: 'var(--font-ui)',
         }}>
-            {/* Type pill — colored if released today */}
             <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 6px',
                 borderRadius: 3, background: pillBg,
@@ -84,13 +144,9 @@ function MacroRow({ o, schedule }: { o: MacroOutcome; schedule: ScheduleEntry[] 
             }}>
                 {TYPE_LABELS[o.type] ?? o.type.toUpperCase()}
             </span>
-
-            {/* Name */}
             <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)', flex: 1, minWidth: 0 }}>
                 {o.name}
             </span>
-
-            {/* Direction */}
             <span style={{ width: 28, flexShrink: 0, textAlign: 'center' }}>
                 {showUp && <span style={{ fontSize: 13, fontWeight: 600, color: UP_COLOR }}>↑</span>}
                 {showDown && <span style={{ fontSize: 13, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
@@ -99,49 +155,26 @@ function MacroRow({ o, schedule }: { o: MacroOutcome; schedule: ScheduleEntry[] 
                         fontSize: 9, fontWeight: 600, padding: '1px 5px',
                         borderRadius: 3, background: 'var(--ink-6)',
                         color: 'var(--ink-4)', letterSpacing: '0.04em',
-                    }}>
-                        HOLD
-                    </span>
+                    }}>HOLD</span>
                 )}
             </span>
-
-            {/* Value */}
             <span style={{ flexShrink: 0, minWidth: 60 }}>
-                <span style={{
-                    fontSize: 13, fontWeight: 700, color: 'var(--ink)',
-                    fontVariantNumeric: 'tabular-nums',
-                }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
                     {valueNum}
                 </span>
                 {valueUnit && (
-                    <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ink-3)', marginLeft: 3 }}>
-                        {valueUnit}
-                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ink-3)', marginLeft: 3 }}>{valueUnit}</span>
                 )}
             </span>
-
-            {/* Latest */}
-            <span style={{
-                flexShrink: 0, minWidth: 90,
-                display: 'flex', alignItems: 'center', gap: 5,
-            }}>
+            <span style={{ flexShrink: 0, minWidth: 90, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>Latest</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)' }}>
-                    {formatDate(o.latest_date)}
-                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)' }}>{formatDate(o.latest_date)}</span>
             </span>
-
-            {/* Upcoming */}
-            <span style={{
-                flexShrink: 0, minWidth: 120,
-                display: 'flex', alignItems: 'center', gap: 5,
-            }}>
+            <span style={{ flexShrink: 0, minWidth: 120, display: 'flex', alignItems: 'center', gap: 5 }}>
                 {scheduled ? (
                     <>
                         <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>Upcoming</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)' }}>
-                            {scheduled}
-                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)' }}>{scheduled}</span>
                     </>
                 ) : (
                     <span style={{ color: 'var(--ink-5)', fontSize: 12 }}>—</span>
@@ -157,6 +190,13 @@ interface Props {
 }
 
 export default function MacroTable({ outcomes, schedule }: Props) {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 640)
+        window.addEventListener('resize', handler)
+        return () => window.removeEventListener('resize', handler)
+    }, [])
+
     if (!outcomes.length) return null
 
     const usMacro = outcomes.filter(o => ['cpi', 'pce', 'nfp', 'jolts', 'gdp'].includes(o.type))
@@ -183,14 +223,19 @@ export default function MacroTable({ outcomes, schedule }: Props) {
             }}>
                 Macro Indicators
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 32px' }}>
+            {/* Mobile: single column stacked, Desktop: two-column grid */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                gap: isMobile ? '0' : '0 32px',
+            }}>
                 <div>
                     <GroupHeader label="US Economic" />
-                    {usMacro.map(o => <MacroRow key={o.type} o={o} schedule={schedule} />)}
+                    {usMacro.map(o => <MacroRow key={o.type} o={o} schedule={schedule} isMobile={isMobile} />)}
                 </div>
-                <div>
+                <div style={{ marginTop: isMobile ? 16 : 0 }}>
                     <GroupHeader label="Central Banks" />
-                    {cbRates.map(o => <MacroRow key={o.type} o={o} schedule={schedule} />)}
+                    {cbRates.map(o => <MacroRow key={o.type} o={o} schedule={schedule} isMobile={isMobile} />)}
                 </div>
             </div>
         </div>

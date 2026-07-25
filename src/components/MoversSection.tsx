@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { NlpMovers, PriceMover } from './BriefingTab'
 
 const UP_COLOR = '#5ec98b'
@@ -51,6 +52,13 @@ interface Props {
 }
 
 export default function MoversSection({ byNews, byPrice, availableTickers, onTickerClick, onClusterClick }: Props) {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 640)
+        window.addEventListener('resize', handler)
+        return () => window.removeEventListener('resize', handler)
+    }, [])
+
     return (
         <div>
             <p style={{
@@ -60,10 +68,14 @@ export default function MoversSection({ byNews, byPrice, availableTickers, onTic
             }}>
                 Market Movers
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+                gap: isMobile ? 0 : 20,
+            }}>
 
-                {/* By Coverage — only navigate if ticker has a Tickers-tab page */}
-                <div>
+                {/* By Coverage */}
+                <div style={{ marginBottom: isMobile ? 16 : 0 }}>
                     <ColumnHeader label="By Coverage" />
                     {byNews.top_tickers.map(t => {
                         const isAvailable = availableTickers.has(t.ticker)
@@ -100,8 +112,8 @@ export default function MoversSection({ byNews, byPrice, availableTickers, onTic
                     })}
                 </div>
 
-                {/* By Price — only navigate if ticker has a Tickers-tab page */}
-                <div>
+                {/* By Price */}
+                <div style={{ marginBottom: isMobile ? 16 : 0 }}>
                     <ColumnHeader label="By Price" />
                     {byPrice.map(m => {
                         const isAvailable = availableTickers.has(m.ticker)

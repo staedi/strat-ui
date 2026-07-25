@@ -1,8 +1,8 @@
+import { useState, useEffect } from 'react'
 import type { Snapshot, SnapshotItem } from './BriefingTab'
 
 const FX_EXCLUDE = new Set(['AUDUSD=X', 'CNY=X'])
 
-// Unified colors matching Tickers tab
 const UP_COLOR = '#5ec98b'
 const DOWN_COLOR = '#e06c75'
 
@@ -34,8 +34,9 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
         <div style={{
             display: 'flex', alignItems: 'baseline',
             padding: '7px 8px', gap: 12,
-            background: shaded ? 'var(--ink-6)' : 'transparent',
             borderRadius: 4,
+            borderBottom: '1px solid var(--ink-6)',
+            marginBottom: 4,
         }}>
             <span style={{
                 fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
@@ -44,10 +45,10 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
             }}>
                 {label}
             </span>
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'baseline' }}>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'baseline' }}>
                 {filtered.map(item => (
                     <div key={item.ticker} style={{
-                        display: 'flex', alignItems: 'baseline', gap: 5,
+                        display: 'flex', alignItems: 'baseline', gap: 4
                     }}>
                         <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
                             {item.label}
