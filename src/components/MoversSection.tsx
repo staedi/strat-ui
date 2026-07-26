@@ -76,7 +76,7 @@ export default function MoversSection({ byNews, byPrice, availableTickers, onTic
 
                 {/* By Coverage */}
                 <div style={{ marginBottom: isMobile ? 16 : 0 }}>
-                    <ColumnHeader label="By Coverage" />
+                    <ColumnHeader label="By Sentiment" />
                     {byNews.top_tickers.map(t => {
                         const isAvailable = availableTickers.has(t.ticker)
                         return (

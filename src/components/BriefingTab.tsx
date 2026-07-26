@@ -160,9 +160,10 @@ export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Pro
                     Market Briefing
                 </h2>
                 <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
-                    {new Date(data.snapshot_date).toLocaleDateString('en-US', {
+                    {/* {new Date(data.snapshot_date).toLocaleDateString('en-US', {
                         weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-                    })}
+                    })} */}
+                    {fmtDate(data.snapshot_date)}
                 </p>
             </div>
 
