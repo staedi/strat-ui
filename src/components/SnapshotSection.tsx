@@ -26,9 +26,20 @@ function formatClose(close: number, ticker: string): string {
     return close.toFixed(4)
 }
 
+function formatAsOf(iso: string): string {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: string; shaded: boolean }) {
     const filtered = items.filter(i => !FX_EXCLUDE.has(i.ticker))
     if (!filtered.length) return null
+
+    // Peers in the same row share a trading session in the common case — an
+    // item whose as_of is older than the freshest peer (e.g. ^N225/^KS11
+    // lagging ^GSPC/^VIX due to delayed-quote data availability) gets a
+    // stale marker rather than silently looking like same-day data.
+    const freshestAsOf = filtered.reduce((max, i) => (i.as_of > max ? i.as_of : max), filtered[0].as_of)
 
     return (
         <div style={{
@@ -46,28 +57,44 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
                 {label}
             </span>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'baseline' }}>
-                {filtered.map(item => (
-                    <div key={item.ticker} style={{
-                        display: 'flex', alignItems: 'baseline', gap: 4
-                    }}>
-                        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
-                            {item.label}
-                        </span>
-                        <span style={{
-                            fontSize: 13, fontWeight: 700, color: 'var(--ink)',
-                            fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums',
+                {filtered.map(item => {
+                    const isStale = item.as_of < freshestAsOf
+                    return (
+                        <div key={item.ticker} style={{
+                            display: 'flex', alignItems: 'baseline', gap: 4
                         }}>
-                            {formatClose(item.close, item.ticker)}
-                        </span>
-                        <span style={{
-                            fontSize: 11, fontWeight: 600,
-                            color: changePctColor(item.change_pct),
-                            fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums',
-                        }}>
-                            {formatPct(item.change_pct)}
-                        </span>
-                    </div>
-                ))}
+                            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
+                                {item.label}
+                            </span>
+                            <span style={{
+                                fontSize: 13, fontWeight: 700, color: 'var(--ink)',
+                                fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums',
+                            }}>
+                                {formatClose(item.close, item.ticker)}
+                            </span>
+                            <span style={{
+                                fontSize: 11, fontWeight: 600,
+                                color: changePctColor(item.change_pct),
+                                fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums',
+                            }}>
+                                {formatPct(item.change_pct)}
+                            </span>
+                            {isStale && (
+                                <span
+                                    title={`Historical bar not yet finalized — showing ${formatAsOf(item.as_of)} data`}
+                                    style={{
+                                        fontSize: 9, fontWeight: 600, letterSpacing: '0.03em',
+                                        textTransform: 'uppercase', color: 'var(--ink-4)',
+                                        border: '1px solid var(--ink-5)', borderRadius: 3,
+                                        padding: '1px 4px', flexShrink: 0, cursor: 'default',
+                                    }}
+                                >
+                                    delayed
+                                </span>
+                            )}
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )
