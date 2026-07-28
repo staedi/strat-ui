@@ -60,9 +60,11 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
 
     const scheduled = nextScheduled(o.type, schedule)
 
-    const match = o.latest_value.match(/^([\d,.$]+(?:\.\d+)?%?)(.*)?$/)
-    const valueNum = match?.[1] ?? o.latest_value
-    const valueUnit = match?.[2]?.trim() ?? ''
+    // Range values (e.g. "3.50% – 3.75%") must render whole string at full weight
+    const isRange = o.latest_value.includes('–')
+    const match = !isRange ? o.latest_value.match(/^([\d,.$]+(?:\.\d+)?%?)(.*)?$/) : null
+    const valueNum = isRange ? o.latest_value : (match?.[1] ?? o.latest_value)
+    const valueUnit = isRange ? '' : (match?.[2]?.trim() ?? '')
 
     const isToday = o.latest_date?.slice(0, 10) === TODAY_ISO
     const pillBg = isToday ? (TYPE_COLORS[o.type] ?? 'var(--ink)') : 'var(--ink-6)'
@@ -158,7 +160,7 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                     }}>HOLD</span>
                 )}
             </span>
-            <span style={{ flexShrink: 0, minWidth: 60 }}>
+            <span style={{ flexShrink: 0, minWidth: 90 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
                     {valueNum}
                 </span>
