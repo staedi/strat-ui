@@ -83,10 +83,10 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
                                 <span
                                     title={`Historical bar not yet finalized — showing ${formatAsOf(item.as_of)} data`}
                                     style={{
-                                        fontSize: 9, fontWeight: 600, letterSpacing: '0.03em',
+                                        fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
                                         textTransform: 'uppercase', color: 'var(--ink-4)',
-                                        border: '1px solid var(--ink-5)', borderRadius: 3,
-                                        padding: '1px 4px', flexShrink: 0, cursor: 'default',
+                                        background: 'var(--ink-6)', borderRadius: 3,
+                                        padding: '2px 5px', flexShrink: 0, cursor: 'default',
                                     }}
                                 >
                                     delayed

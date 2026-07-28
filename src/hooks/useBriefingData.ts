@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Briefing } from '../components/BriefingTab'
 
-const BASE_URL = 'https://raw.githubusercontent.com/staedi/strat-data/main'
+import { BASE_URL } from '../config'
 
 export function useBriefingData() {
     const [data, setData] = useState<Briefing | null>(null)

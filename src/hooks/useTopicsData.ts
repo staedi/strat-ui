@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { TopicsData } from '../components/CirclePacking'
 
-const BASE_URL = 'https://raw.githubusercontent.com/staedi/strat-data/main'
+import { BASE_URL } from '../config'
 
 function currentISOWeek(): string {
   const now = new Date()

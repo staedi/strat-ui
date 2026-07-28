@@ -88,12 +88,12 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                     <span style={{ fontSize: 11, color: 'var(--ink-4)', flex: 1, minWidth: 0 }}>
                         {o.name}
                     </span>
-                    <span style={{ width: 20, flexShrink: 0, textAlign: 'center' }}>
+                    <span style={{ width: 36, flexShrink: 0, textAlign: 'center' }}>
                         {showUp && <span style={{ fontSize: 12, fontWeight: 600, color: UP_COLOR }}>↑</span>}
                         {showDown && <span style={{ fontSize: 12, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
                         {showHold && (
                             <span style={{
-                                fontSize: 8, fontWeight: 600, padding: '1px 4px',
+                                fontSize: 9, fontWeight: 600, padding: '2px 5px',
                                 borderRadius: 3, background: 'var(--ink-6)',
                                 color: 'var(--ink-4)', letterSpacing: '0.04em',
                             }}>HOLD</span>
@@ -147,12 +147,12 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
             <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)', flex: 1, minWidth: 0 }}>
                 {o.name}
             </span>
-            <span style={{ width: 28, flexShrink: 0, textAlign: 'center' }}>
+            <span style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
                 {showUp && <span style={{ fontSize: 13, fontWeight: 600, color: UP_COLOR }}>↑</span>}
                 {showDown && <span style={{ fontSize: 13, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
                 {showHold && (
                     <span style={{
-                        fontSize: 9, fontWeight: 600, padding: '1px 5px',
+                        fontSize: 9, fontWeight: 600, padding: '2px 5px',
                         borderRadius: 3, background: 'var(--ink-6)',
                         color: 'var(--ink-4)', letterSpacing: '0.04em',
                     }}>HOLD</span>
