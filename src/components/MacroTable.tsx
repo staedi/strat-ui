@@ -69,7 +69,7 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
     const RangeValue = () => rangeParts ? (
         <span style={{ fontVariantNumeric: 'tabular-nums' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{rangeParts[0]}</span>
-            <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-3)', margin: '0 3px' }}>–</span>
+            <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--ink-4)', margin: '0 3px' }}>–</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{rangeParts[1]}</span>
         </span>
     ) : null
