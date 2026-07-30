@@ -27,7 +27,7 @@ export interface AggregatedTicker {
 // ── Palette ───────────────────────────────────────────────────────────────────
 
 const PALETTE = [
-  'var(--ink)', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
+  '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
   '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',
   '#4db6ac', '#ff8a65',
 ]
@@ -810,7 +810,7 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
 // ── Peer comparison chart ─────────────────────────────────────────────────────
 
 const PEER_PALETTE = [
-  '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
+  'var(--ink)', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
   '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',
   '#4db6ac', '#ff8a65',
 ]
