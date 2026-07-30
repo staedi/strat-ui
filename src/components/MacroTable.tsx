@@ -3,12 +3,12 @@ import type { MacroOutcome, ScheduleEntry } from './BriefingTab'
 
 const TYPE_LABELS: Record<string, string> = {
     fed: 'FED', cpi: 'CPI', nfp: 'NFP', jolts: 'JOLTS',
-    pce: 'PCE', gdp: 'GDP', ecb: 'ECB', boe: 'BOE', boj: 'BOJ',
+    pce: 'PCE', gdp: 'GDP', unrate: 'UNEMP', ecb: 'ECB', boe: 'BOE', boj: 'BOJ',
 }
 
 const TYPE_COLORS: Record<string, string> = {
     fed: '#2563eb', ecb: '#7c3aed', boe: '#0891b2', boj: '#be185d',
-    cpi: '#d97706', nfp: '#d97706', jolts: '#d97706',
+    cpi: '#d97706', nfp: '#d97706', unrate: '#d97706', jolts: '#d97706',
     pce: '#d97706', gdp: '#16a34a',
 }
 
@@ -217,7 +217,7 @@ export default function MacroTable({ outcomes, schedule }: Props) {
 
     if (!outcomes.length) return null
 
-    const usMacro = outcomes.filter(o => ['cpi', 'pce', 'nfp', 'jolts', 'gdp'].includes(o.type))
+    const usMacro = outcomes.filter(o => ['cpi', 'pce', 'nfp', 'unrate', 'jolts', 'gdp'].includes(o.type))
     const cbRates = outcomes.filter(o => CB_TYPES.has(o.type))
 
     const GroupHeader = ({ label }: { label: string }) => (
