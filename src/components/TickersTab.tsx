@@ -27,7 +27,7 @@ export interface AggregatedTicker {
 // ── Palette ───────────────────────────────────────────────────────────────────
 
 const PALETTE = [
-  '#4e9af1', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
+  'var(--ink)', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
   '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',
   '#4db6ac', '#ff8a65',
 ]
@@ -373,8 +373,8 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
                 <button key={s} onClick={() => setSort(s)} style={{
                   padding: '3px 10px', borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--ink-5)',
-                  background: sort === s ? 'var(--ink)' : 'transparent',
-                  color: sort === s ? 'var(--white)' : 'var(--ink-3)',
+                  background: sort === s ? 'var(--ink-6)' : 'transparent',
+                  color: sort === s ? 'var(--ink)' : 'var(--ink-3)',
                   fontSize: 11, fontWeight: 500, cursor: 'pointer',
                   fontFamily: 'var(--font-ui)',
                 }}>
@@ -426,7 +426,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
                 {/* Name — hidden on mobile */}
                 {!isMobile && (
                   <span style={{
-                    flex: 1, fontSize: 12, color: isSelected ? 'var(--ink)' : 'var(--ink-2)',
+                    flex: 1, fontSize: 12, color: isSelected ? 'var(--ink-2)' : 'var(--ink-4)',
                     fontWeight: isSelected ? 600 : 400,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
@@ -558,8 +558,8 @@ function TickerDetail({
                 style={{
                   padding: '3px 10px', borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--ink-5)',
-                  background: tab === t ? 'var(--ink)' : 'transparent',
-                  color: tab === t ? 'var(--white)' : (!hasProfile && t === 'profile' ? 'var(--ink-5)' : 'var(--ink-3)'),
+                  background: tab === t ? 'var(--ink-6)' : 'transparent',
+                  color: tab === t ? 'var(--ink)' : (!hasProfile && t === 'profile' ? 'var(--ink-5)' : 'var(--ink-3)'),
                   fontSize: 11, fontWeight: 500,
                   cursor: (!hasProfile && t === 'profile') ? 'default' : 'pointer',
                   fontFamily: 'var(--font-ui)',
@@ -1281,7 +1281,7 @@ function ClusterCard({ cluster, onClusterClick }: { cluster: AggregatedTicker['c
         {cluster.name}
       </p>
       {cluster.summary && (
-        <p style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.5, fontFamily: 'var(--font-ui)' }}>
+        <p style={{ fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5, fontFamily: 'var(--font-ui)' }}>
           {cluster.summary}
         </p>
       )}
