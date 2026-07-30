@@ -25,7 +25,7 @@ The dashboard comprises the following tabs.
 ### Market Briefings (`Briefing`)
 
 The following information are presented.
-- Upcoming events: Economic indicator releases, central bank meetings and listing on the markets
+- Upcoming events: Upcoming Economic indicator releases, central bank meetings and listing on the markets
 - Market Snapshot: Major daily snapshot of market figures (indices, bonds, FX, commodities, crypto, etc.) are presented.
 - Macro Indicators: US Economic indicators (e.g., cpi, employment, etc) and central bank rates are presented.
 - Market Movers: Trending tickers by topic sentiment and price variances, and Trending topic clusters are presented.
@@ -44,7 +44,7 @@ Organized by the following sub-tabs.
 
 ### Briefings
 
-<img width="1106" height="760" alt="briefing" src="https://github.com/user-attachments/assets/bf8781ac-09f6-44b3-999b-861d05f5f3ca" />
+<img width="1102" height="751" alt="briefing" src="https://github.com/user-attachments/assets/a03bea3a-ccd2-4bec-aff5-8a6b901ee22f" />
 
 ### Topics
 
