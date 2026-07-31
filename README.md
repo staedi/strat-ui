@@ -54,20 +54,20 @@ Organized by the following sub-tabs.
 
 ### Topics
 
-**Topic Clusters**
+#### Topic Clusters
 
-<img width="1113" height="763" alt="topics" src="https://github.com/user-attachments/assets/e27d91ba-37f9-416d-a0be-4994b7fb3d66" />
+<img width="1107" height="758" alt="topics" src="https://github.com/user-attachments/assets/2f25859f-8d90-41af-8a25-a4dea4c0c636" />
 
 ### Tickers
 
-**Ticker Overview**
+#### Ticker Overview
 
-<img width="1107" height="757" alt="tickers-overview" src="https://github.com/user-attachments/assets/4ef61824-1bd9-44f3-96fb-fa417a42aabe" />
+<img width="1107" height="756" alt="tickers-overview" src="https://github.com/user-attachments/assets/a4634ac9-bbf4-4431-a6ea-df820277c8c0" />
 
-**Ticker Profile**
+#### Ticker Profile
 
-<img width="1107" height="755" alt="tickers-profile" src="https://github.com/user-attachments/assets/26b2881e-ee85-4287-944a-32f510c1abb3" />
+<img width="1105" height="754" alt="tickers-profile" src="https://github.com/user-attachments/assets/aeb34a27-0fcf-4801-b979-1403c331e4cb" />
 
-**Ticker Peer Comparison**
+#### Ticker Peer Comparison
 
-<img width="1107" height="755" alt="tickers-peer" src="https://github.com/user-attachments/assets/ca6fa8e2-3fa3-4cfb-ab72-145b1d80ecf8" />
+<img width="1107" height="759" alt="tickers-peer" src="https://github.com/user-attachments/assets/b25abf18-44d1-4f96-8a2f-6c3b74092d6c" />
