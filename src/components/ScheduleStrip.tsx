@@ -2,7 +2,7 @@ import type { ScheduleEntry, Debut } from './BriefingTab'
 
 const TYPE_LABELS: Record<string, string> = {
     fed: 'FED', cpi: 'CPI', nfp: 'NFP', jolts: 'JOLTS',
-    pce: 'PCE', gdp: 'GDP', ecb: 'ECB', boe: 'BOE', boj: 'BOJ',
+    pce: 'PCE', gdp: 'GDP', unrate: 'UNEMP', ecb: 'ECB', boe: 'BOE', boj: 'BOJ',
     debut: 'DEBUT',
 }
 
@@ -44,7 +44,7 @@ export default function ScheduleStrip({ entries, recentDebuts = [], availableTic
                 textTransform: 'uppercase', color: 'var(--ink-4)',
                 margin: '0 0 8px', fontFamily: 'var(--font-ui)',
             }}>
-                Upcoming
+                Schedule
             </p>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {upcoming.map((e, i) => {

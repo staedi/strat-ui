@@ -125,14 +125,14 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                 {/* Line 2: Latest + Upcoming dates */}
                 <div style={{ display: 'flex', gap: 16, paddingLeft: 52 }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Latest</span>
+                        <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>As of</span>
                         <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink-2)' }}>
                             {formatDate(o.latest_date)}
                         </span>
                     </span>
                     {scheduled && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Upcoming</span>
+                            <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Scheduled</span>
                             <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
                                 {scheduled}
                             </span>
@@ -185,13 +185,13 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                 )}
             </span>
             <span style={{ flexShrink: 0, minWidth: 90, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>Latest</span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>As of</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-2)' }}>{formatDate(o.latest_date)}</span>
             </span>
             <span style={{ flexShrink: 0, minWidth: 120, display: 'flex', alignItems: 'center', gap: 5 }}>
                 {scheduled ? (
                     <>
-                        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>Upcoming</span>
+                        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>Scheduled</span>
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)' }}>{scheduled}</span>
                     </>
                 ) : (
