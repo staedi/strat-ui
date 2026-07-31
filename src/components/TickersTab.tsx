@@ -373,10 +373,10 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
                 <button key={s} onClick={() => setSort(s)} style={{
                   padding: '3px 10px', borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--ink-5)',
-                  background: sort === s ? 'var(--ink-6)' : 'transparent',
-                  color: sort === s ? 'var(--ink)' : 'var(--ink-3)',
-                  fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                  fontFamily: 'var(--font-ui)',
+                  background: sort === s ? 'var(--ink)' : 'transparent',
+                  color: sort === s ? 'white' : 'var(--ink-3)',
+                  fontSize: 11, fontWeight: sort === s ? 600 : 400, cursor: 'pointer',
+                  fontFamily: 'var(--font-ui)', transition: 'all .15s',
                 }}>
                   {s === 'count' ? 'By mentions' : 'A–Z'}
                 </button>
@@ -558,11 +558,11 @@ function TickerDetail({
                 style={{
                   padding: '3px 10px', borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--ink-5)',
-                  background: tab === t ? 'var(--ink-6)' : 'transparent',
-                  color: tab === t ? 'var(--ink)' : (!hasProfile && t === 'profile' ? 'var(--ink-5)' : 'var(--ink-3)'),
-                  fontSize: 11, fontWeight: 500,
+                  background: tab === t ? 'var(--ink)' : 'transparent',
+                  color: tab === t ? 'white' : (!hasProfile && t === 'profile' ? 'var(--ink-5)' : 'var(--ink-3)'),
+                  fontSize: 11, fontWeight: tab === t ? 600 : 400,
                   cursor: (!hasProfile && t === 'profile') ? 'default' : 'pointer',
-                  fontFamily: 'var(--font-ui)',
+                  fontFamily: 'var(--font-ui)', transition: 'all .15s',
                 }}
               >
                 {t === 'overview' ? 'Overview' : 'Profile'}
