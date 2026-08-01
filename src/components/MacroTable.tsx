@@ -146,7 +146,7 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                     {scheduled && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Scheduled</span>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: isPending ? 'var(--ink-3)' : 'var(--ink)' }}>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
                                 {scheduled}
                             </span>
                         </span>
