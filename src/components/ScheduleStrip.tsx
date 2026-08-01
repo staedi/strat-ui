@@ -6,12 +6,6 @@ const TYPE_LABELS: Record<string, string> = {
     debut: 'DEBUT',
 }
 
-const TYPE_COLORS: Record<string, string> = {
-    fed: '#2563eb', ecb: '#7c3aed', boe: '#0891b2', boj: '#be185d',
-    cpi: '#d97706', nfp: '#d97706', jolts: '#d97706',
-    pce: '#d97706', gdp: '#16a34a', debut: '#c026d3',
-}
-
 function daysUntil(iso: string): number {
     const today = new Date(); today.setHours(0, 0, 0, 0)
     const target = new Date(iso); target.setHours(0, 0, 0, 0)
@@ -49,16 +43,13 @@ export default function ScheduleStrip({ entries, recentDebuts = [], availableTic
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {upcoming.map((e, i) => {
                     const days = daysUntil(e.date)
-                    // const color = TYPE_COLORS[e.type] ?? 'var(--ink-4)'
                     const isToday = days === 0
-                    // const isSoon = days <= 3
 
                     return (
                         <div key={i} style={{
                             display: 'flex', alignItems: 'center', gap: 5,
                             padding: '4px 9px', borderRadius: 20,
-                            background: isToday ? 'var(--ink)' : 'var(--ink-7)',
-                            // border: `1px solid ${isToday ? 'var(--ink)' : 'var(--ink-5)'}`,
+                            background: isToday ? 'var(--highlight)' : 'var(--ink-7)',
                         }}>
                             <span style={{
                                 fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',

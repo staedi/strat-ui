@@ -809,12 +809,6 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
 
 // ── Peer comparison chart ─────────────────────────────────────────────────────
 
-const PEER_PALETTE = [
-  'var(--ink)', '#f0a653', '#5ec98b', '#e06c75', '#c792ea',
-  '#56b6c2', '#e5c07b', '#98c379', '#f07178', '#7986cb',
-  '#4db6ac', '#ff8a65',
-]
-
 function PeerComparisonChart({
   selectedTicker,
   comparisonTickers,
@@ -913,7 +907,15 @@ function PeerComparisonChart({
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {allTickers.map((t, idx) => {
           const isSelected = idx === 0
-          const color = PEER_PALETTE[idx % PEER_PALETTE.length]
+          // Multi-series comparison (unlike MacroTable's/ScheduleStrip's
+          // single boolean-state pills) — each row is a simultaneously-
+          // visible sparkline the user scans and compares shapes across, so
+          // it needs real per-row visual separation, not one shared
+          // highlight + flat neutral. Reuses the same PALETTE as
+          // ClusterCard rather than a second copy of the array; idx 0
+          // (always the selected ticker) lands on PALETTE[0], which is the
+          // same soft blue as --highlight.
+          const color = clusterColor(idx)
           const priceLine = priceMap.get(t)
           const sentiment = allSentimentData[t]
           const hasPrice = !!priceLine

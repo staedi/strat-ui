@@ -6,12 +6,6 @@ const TYPE_LABELS: Record<string, string> = {
     pce: 'PCE', gdp: 'GDP', unrate: 'UNEMP', ecb: 'ECB', boe: 'BOE', boj: 'BOJ',
 }
 
-const TYPE_COLORS: Record<string, string> = {
-    fed: '#2563eb', ecb: '#7c3aed', boe: '#0891b2', boj: '#be185d',
-    cpi: '#d97706', nfp: '#d97706', unrate: '#d97706', jolts: '#d97706',
-    pce: '#d97706', gdp: '#16a34a',
-}
-
 const CB_TYPES = new Set(['fed', 'ecb', 'boe', 'boj'])
 const UP_COLOR = '#5ec98b'
 const DOWN_COLOR = '#e06c75'
@@ -22,12 +16,14 @@ function formatDate(iso: string): string {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function nextScheduled(type: string, schedule: ScheduleEntry[]): string | null {
+function nextScheduled(type: string, schedule: ScheduleEntry[]): { date: string; pending: boolean } | null {
     const today = new Date(); today.setHours(0, 0, 0, 0)
-    const match = schedule
-        .filter(e => e.type === type && new Date(e.date) >= today)
-        .sort((a, b) => a.date.localeCompare(b.date))[0]
-    return match ? formatDate(match.date) : null
+    const sorted = schedule.filter(e => e.type === type).sort((a, b) => a.date.localeCompare(b.date))
+    const upcoming = sorted.find(e => new Date(e.date) >= today)
+    if (upcoming) return { date: upcoming.date, pending: false }
+    // No future entry — fall back to most recent past (data not yet ingested)
+    const past = [...sorted].reverse().find(e => new Date(e.date) < today)
+    return past ? { date: past.date, pending: true } : null
 }
 
 type Direction = 'hike' | 'cut' | 'hold' | null
@@ -58,7 +54,10 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
     const showDown = isCB ? direction === 'cut' : trendDown
     const showHold = isCB && direction === 'hold'
 
-    const scheduled = nextScheduled(o.type, schedule)
+    const scheduledEntry = nextScheduled(o.type, schedule)
+    // Only treat as pending if the scheduled date is newer than our latest data
+    const isPending = scheduledEntry?.pending === true && (scheduledEntry.date > (o.latest_date ?? ''))
+    const scheduled = scheduledEntry ? formatDate(scheduledEntry.date) : null
 
     const isRange = o.latest_value.includes('–')
     const rangeParts = isRange ? o.latest_value.split('–').map(s => s.trim()) : null
@@ -75,7 +74,11 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
     ) : null
 
     const isToday = o.latest_date?.slice(0, 10) === TODAY_ISO
-    const pillBg = isToday ? (TYPE_COLORS[o.type] ?? 'var(--ink)') : 'var(--ink-6)'
+    // One shared highlight color for any "released today" pill, indicator
+    // or central bank alike — the pill's own text (CPI/FED/GDP/etc.)
+    // already identifies which one, so a per-type hue only ever encoded
+    // "is this current," which a single shared color says just as well.
+    const pillBg = isToday ? 'var(--highlight)' : 'var(--ink-6)'
     const pillColor = isToday ? 'white' : 'var(--ink-3)'
 
     if (isMobile) {
@@ -98,15 +101,25 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                     <span style={{ fontSize: 11, color: 'var(--ink-4)', flex: 1, minWidth: 0 }}>
                         {o.name}
                     </span>
-                    <span style={{ width: 36, flexShrink: 0, textAlign: 'center' }}>
-                        {showUp && <span style={{ fontSize: 12, fontWeight: 600, color: UP_COLOR }}>↑</span>}
-                        {showDown && <span style={{ fontSize: 12, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
-                        {showHold && (
+                    <span style={{ width: 50, flexShrink: 0, textAlign: 'center' }}>
+                        {isPending ? (
                             <span style={{
                                 fontSize: 9, fontWeight: 600, padding: '2px 5px',
                                 borderRadius: 3, background: 'var(--ink-6)',
                                 color: 'var(--ink-4)', letterSpacing: '0.04em',
-                            }}>HOLD</span>
+                            }}>DELAYED</span>
+                        ) : (
+                            <>
+                                {showUp && <span style={{ fontSize: 12, fontWeight: 600, color: UP_COLOR }}>↑</span>}
+                                {showDown && <span style={{ fontSize: 12, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
+                                {showHold && (
+                                    <span style={{
+                                        fontSize: 9, fontWeight: 600, padding: '2px 5px',
+                                        borderRadius: 3, background: 'var(--ink-6)',
+                                        color: 'var(--ink-4)', letterSpacing: '0.04em',
+                                    }}>HOLD</span>
+                                )}
+                            </>
                         )}
                     </span>
                     <span style={{ flexShrink: 0 }}>
@@ -133,7 +146,7 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                     {scheduled && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <span style={{ fontSize: 10, color: 'var(--ink-4)' }}>Scheduled</span>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: isPending ? 'var(--ink-3)' : 'var(--ink)' }}>
                                 {scheduled}
                             </span>
                         </span>
@@ -161,15 +174,25 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
             <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)', flex: 1, minWidth: 0 }}>
                 {o.name}
             </span>
-            <span style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
-                {showUp && <span style={{ fontSize: 13, fontWeight: 600, color: UP_COLOR }}>↑</span>}
-                {showDown && <span style={{ fontSize: 13, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
-                {showHold && (
+            <span style={{ width: 50, flexShrink: 0, textAlign: 'center' }}>
+                {isPending ? (
                     <span style={{
                         fontSize: 9, fontWeight: 600, padding: '2px 5px',
                         borderRadius: 3, background: 'var(--ink-6)',
                         color: 'var(--ink-4)', letterSpacing: '0.04em',
-                    }}>HOLD</span>
+                    }}>DELAYED</span>
+                ) : (
+                    <>
+                        {showUp && <span style={{ fontSize: 13, fontWeight: 600, color: UP_COLOR }}>↑</span>}
+                        {showDown && <span style={{ fontSize: 13, fontWeight: 600, color: DOWN_COLOR }}>↓</span>}
+                        {showHold && (
+                            <span style={{
+                                fontSize: 9, fontWeight: 600, padding: '2px 5px',
+                                borderRadius: 3, background: 'var(--ink-6)',
+                                color: 'var(--ink-4)', letterSpacing: '0.04em',
+                            }}>HOLD</span>
+                        )}
+                    </>
                 )}
             </span>
             <span style={{ flexShrink: 0, minWidth: 90 }}>
@@ -192,7 +215,9 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
                 {scheduled ? (
                     <>
                         <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--ink-4)' }}>Scheduled</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)' }}>{scheduled}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)' }}>
+                            {scheduled}
+                        </span>
                     </>
                 ) : (
                     <span style={{ color: 'var(--ink-5)', fontSize: 12 }}>—</span>

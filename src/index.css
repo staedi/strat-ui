@@ -11,6 +11,7 @@
   --color-white: #ffffff;
   --color-accent: #0f1117;
   --color-accent-2: #2563eb;
+  --color-highlight: #4e9af1;
   --color-pos: #16a34a;
   --color-neg: #dc2626;
   --color-neu: #6b7280;
@@ -32,6 +33,10 @@
   --white: #ffffff;
   --accent: #0f1117;
   --accent-2: #2563eb;
+  /* Shared "current/selected" highlight (macro pills, peer comparison) —
+     softer than --accent-2, matching the app's pastel palette rather than
+     a fully-saturated brand blue. */
+  --highlight: #4e9af1;
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 14px;
