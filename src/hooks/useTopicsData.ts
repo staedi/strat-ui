@@ -10,7 +10,7 @@ function currentISOWeek(): string {
   return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
 }
 
-export function useTopicsData(mode: 'recent' | 'weekly' | 'full' = 'recent', week?: string) {
+export function useTopicsData(mode: 'recent' | 'weekly' | 'extended' = 'recent', week?: string) {
   const [data, setData] = useState<TopicsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -23,8 +23,8 @@ export function useTopicsData(mode: 'recent' | 'weekly' | 'full' = 'recent', wee
     const resolvedWeek = week ?? currentISOWeek()
     const url = mode === 'recent'
       ? `${BASE_URL}/topics_recent.json`
-      : mode === 'full'
-        ? `${BASE_URL}/topics_full.json`
+      : mode === 'extended'
+        ? `${BASE_URL}/topics_extended.json`
         : `${BASE_URL}/topics_weekly/topics_${resolvedWeek}.json`
 
     fetch(url)

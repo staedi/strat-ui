@@ -27,7 +27,7 @@ export interface PricesData {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function usePricesData(mode: 'recent' | 'weekly' | 'full' = 'recent', week?: string) {
+export function usePricesData(mode: 'recent' | 'weekly' | 'extended' = 'recent', week?: string) {
   const [data, setData] = useState<PricesData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,8 +40,8 @@ export function usePricesData(mode: 'recent' | 'weekly' | 'full' = 'recent', wee
     const resolvedWeek = week ?? currentISOWeek()
     const url = mode === 'recent'
       ? `${BASE_URL}/prices_recent.json`
-      : mode === 'full'
-        ? `${BASE_URL}/prices_full.json`
+      : mode === 'extended'
+        ? `${BASE_URL}/prices_extended.json`
         : `${BASE_URL}/prices_weekly/prices_${resolvedWeek}.json`
 
     fetch(url)

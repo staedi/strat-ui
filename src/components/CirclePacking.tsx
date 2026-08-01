@@ -16,7 +16,7 @@ export interface ClusterNode {
   related_tickers?: TickerInfo[]
   ticker_summary?: Record<string, string>
   ticker_context?: Record<string, string[]>
-  // Recent-vs-baseline activity ratio — only populated in "full" mode
+  // Recent-vs-baseline activity ratio — only populated in "extended" mode
   // (see export_topics_json.py build_hierarchy). null means all of this
   // cluster's activity is inside the recent window, so there's no
   // baseline to compare against ("new").

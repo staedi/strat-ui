@@ -36,6 +36,10 @@ export interface SnapshotItem {
     close: number
     change_pct: number | null
     as_of: string
+    // When this row was last fetched (TIMESTAMPTZ, ISO) — distinct from
+    // as_of's trading-session date. See SnapshotSection.tsx for how this
+    // drives the per-item freshness stamp.
+    updated_at?: string | null
 }
 
 export interface Snapshot {
@@ -95,17 +99,27 @@ export interface Briefing {
     }
 }
 
+// Floating — renders in the viewer's own local timezone (intentional; see
+// project history), not a fixed source zone.
+//
+// Includes its own month/day rather than borrowing snapshot_date's — a run
+// that starts in the early-morning JST hours lands the previous calendar
+// day in ET (the ~13h offset can straddle ET midnight), so generated_at's
+// date can legitimately differ from snapshot_date. Pairing this time-only
+// against snapshot_date's date silently produced a date+time combination
+// that never happened.
 function fmtDate(iso: string): string {
     const d = new Date(iso)
-    return d.toLocaleTimeString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric', timeZoneName: 'short', hour: 'numeric',
+    return d.toLocaleString('en-US', {
+        month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
     })
 }
 
 interface Props {
     onTickerClick: (ticker: string) => void
     onClusterClick: (clusterId: number) => void
-    mode: 'recent' | 'full'
+    mode: 'recent' | 'extended'
 }
 
 export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Props) {
@@ -151,7 +165,7 @@ export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Pro
             fontFamily: 'var(--font-ui)',
         }}>
 
-            {/* Header — date only, no updated at */}
+            {/* Header — date + last-updated time (minute precision, fixed ET) */}
             <div style={{ marginBottom: 16 }}>
                 <h2 style={{
                     fontSize: 22, fontWeight: 700, color: 'var(--ink)',
@@ -161,8 +175,11 @@ export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Pro
                 </h2>
                 <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
                     {new Date(data.snapshot_date).toLocaleDateString('en-US', {
-                        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZoneName: 'short'
+                        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
                     })}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
+                    Last updated {fmtDate(data.generated_at)}
                 </p>
             </div>
 
@@ -205,14 +222,8 @@ export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Pro
                 />
             </div>
 
-            {/* Footer — updated at + disclaimer */}
+            {/* Footer — disclaimer */}
             <div style={{ marginTop: 8 }}>
-                <p style={{
-                    fontSize: 11, color: 'var(--ink-4)',
-                    fontFamily: 'var(--font-ui)', margin: '0 0 2px',
-                }}>
-                    Updated {fmtDate(data.generated_at)}
-                </p>
                 <p style={{
                     fontSize: 11, color: 'var(--ink-4)',
                     fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,

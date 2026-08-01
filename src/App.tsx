@@ -4,7 +4,7 @@ import TickersTab from './components/TickersTab'
 import BriefingTab from './components/BriefingTab'
 
 type Tab = 'briefing' | 'topics' | 'tickers'
-type Mode = 'recent' | 'full'
+type Mode = 'recent' | 'extended'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'briefing', label: 'Briefing' },
@@ -65,14 +65,14 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Recent/Full toggle — invisible on Briefing, but always occupies space */}
+        {/* Recent/Extended toggle — invisible on Briefing, but always occupies space */}
         <div style={{
           display: 'flex', gap: 2,
           background: tab === 'briefing' ? 'transparent' : 'var(--ink-6)',
           borderRadius: 'var(--radius-sm)', padding: 2,
           visibility: tab === 'briefing' ? 'hidden' : 'visible',  // hidden not display:none
         }}>
-          {(['recent', 'full'] as Mode[]).map(m => (
+          {(['recent', 'extended'] as Mode[]).map(m => (
             <button key={m} onClick={() => setMode(m)} style={{
               padding: '3px 12px', borderRadius: 4, border: 'none',
               background: mode === m ? 'var(--white)' : 'transparent',
@@ -82,7 +82,7 @@ export default function App() {
               transition: 'all .15s', textTransform: 'capitalize',
               cursor: 'pointer',
             }}>
-              {m === 'recent' ? 'Recent' : 'Full'}
+              {m === 'recent' ? 'Recent' : 'Extended'}
             </button>
           ))}
         </div>

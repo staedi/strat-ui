@@ -309,11 +309,11 @@ function VolumeChart({ points, windowStart }: { points: PricePoint[]; windowStar
 interface Props {
   initialTicker?: string | null
   onClusterClick: (clusterId: number) => void
-  mode?: 'recent' | 'full'
+  mode?: 'recent' | 'extended'
 }
 
 export default function TickersTab({ initialTicker, onClusterClick, mode = 'recent' }: Props) {
-  const topicsMode = mode === 'full' ? 'full' : 'recent'
+  const topicsMode = mode === 'extended' ? 'extended' : 'recent'
   const { data, loading, error } = useTopicsData(topicsMode)
   const { data: pricesData } = usePricesData(topicsMode)
   const { data: sentimentDataFull } = useSentimentData(topicsMode)

@@ -31,15 +31,43 @@ function formatAsOf(iso: string): string {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+// Floating — renders in the viewer's own local timezone (intentional; see
+// project history), not a fixed source zone. Deliberately absolute rather
+// than relative ("3h ago"): a relative stamp keeps counting up after the
+// market closes even though the close itself is final and won't change
+// again until the next session, which reads as an escalating problem when
+// there isn't one.
+function formatUpdatedAt(iso: string): string {
+    const d = new Date(iso)
+    return d.toLocaleTimeString('en-US', {
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+    })
+}
+
 function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: string; shaded: boolean }) {
     const filtered = items.filter(i => !FX_EXCLUDE.has(i.ticker))
     if (!filtered.length) return null
 
     // Peers in the same row share a trading session in the common case — an
-    // item whose as_of is older than the freshest peer (e.g. ^N225/^KS11
-    // lagging ^GSPC/^VIX due to delayed-quote data availability) gets a
-    // stale marker rather than silently looking like same-day data.
-    const freshestAsOf = filtered.reduce((max, i) => (i.as_of > max ? i.as_of : max), filtered[0].as_of)
+    // item whose last fetch (updated_at) lags the freshest peer's (e.g.
+    // ^N225/^KS11 lagging ^GSPC/^VIX due to session-time differences, or any
+    // ticker the latest hourly prices-briefing run hasn't re-fetched yet)
+    // gets a freshness stamp rather than silently looking equally current.
+    // Falls back to as_of (trading-session date) for entries from an export
+    // predating updated_at.
+    //
+    // Compared as parsed instants, not raw strings: updated_at's offset
+    // isn't guaranteed consistent across rows (DuckDB's TIMESTAMPTZ always
+    // re-displays in the reading session's own local TimeZone setting, not
+    // whichever tzinfo the value was originally written with — dev vs. prod
+    // host timezone, or just EDT/EST across seasons, can differ), so a plain
+    // string ">" comparison could sort two genuinely-ordered timestamps
+    // backwards.
+    const freshnessValue = (i: SnapshotItem) => new Date(i.updated_at ?? i.as_of).getTime()
+    const freshest = filtered.reduce(
+        (max, i) => Math.max(max, freshnessValue(i)),
+        freshnessValue(filtered[0]),
+    )
 
     return (
         <div style={{
@@ -58,7 +86,7 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
             </span>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'baseline' }}>
                 {filtered.map(item => {
-                    const isStale = item.as_of < freshestAsOf
+                    const isStale = freshnessValue(item) < freshest
                     return (
                         <div key={item.ticker} style={{
                             display: 'flex', alignItems: 'baseline', gap: 4
@@ -81,15 +109,18 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
                             </span>
                             {isStale && (
                                 <span
-                                    title={`Historical bar not yet finalized — showing ${formatAsOf(item.as_of)} data`}
+                                    title={item.updated_at
+                                        ? `Last fetched ${formatUpdatedAt(item.updated_at)} — other assets in this row are more recent`
+                                        : `Historical bar not yet finalized — showing ${formatAsOf(item.as_of)} data`}
                                     style={{
                                         fontSize: 9, fontWeight: 600, letterSpacing: '0.04em',
-                                        textTransform: 'uppercase', color: 'var(--ink-4)',
+                                        color: 'var(--ink-4)',
                                         background: 'var(--ink-6)', borderRadius: 3,
                                         padding: '2px 5px', flexShrink: 0, cursor: 'default',
+                                        fontVariantNumeric: 'tabular-nums',
                                     }}
                                 >
-                                    delayed
+                                    {item.updated_at ? formatUpdatedAt(item.updated_at) : formatAsOf(item.as_of)}
                                 </span>
                             )}
                         </div>

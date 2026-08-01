@@ -7,7 +7,7 @@ import { useSentimentData } from '../hooks/useSentimentData'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type AppMode = 'recent' | 'full'      // owned by App.tsx, shared across tabs
+type AppMode = 'recent' | 'extended'  // owned by App.tsx, shared across tabs
 interface Props {
   onTickerClick: (ticker: string) => void
   initialCluster?: number | null

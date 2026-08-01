@@ -15,7 +15,7 @@ interface Props {
   meta: MetaCategoryNode
   onClose: () => void
   onTickerClick: (ticker: string) => void
-  // Whole-ticker momentum (export_sentiment_json.py, "full" mode only) —
+  // Whole-ticker momentum (export_sentiment_json.py, "extended" mode only) —
   // NOT scoped to this cluster. A ticker can show 🔥 here because it's
   // surging overall while its mentions in THIS cluster are only part of
   // that story; still the most useful "which ticker in this cluster is

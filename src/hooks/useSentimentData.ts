@@ -45,7 +45,7 @@ export interface TickerSentiment {
     score: number
     daily: SentimentDay[]
     clusters: SentimentCluster[]
-    // Recent-vs-baseline activity ratio — only populated in "full" mode
+    // Recent-vs-baseline activity ratio — only populated in "extended" mode
     // (see export_sentiment_json.py aggregate()). null means all of this
     // ticker's mentions are inside the recent window ("new").
     momentum?: number | null
@@ -61,7 +61,7 @@ export interface SentimentData {
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useSentimentData(mode: 'recent' | 'weekly' | 'full' = 'recent', week?: string) {
+export function useSentimentData(mode: 'recent' | 'weekly' | 'extended' = 'recent', week?: string) {
     const [data, setData] = useState<SentimentData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -74,8 +74,8 @@ export function useSentimentData(mode: 'recent' | 'weekly' | 'full' = 'recent', 
         const resolvedWeek = week ?? currentISOWeek()
         const url = mode === 'recent'
             ? `${BASE_URL}/sentiment_recent.json`
-            : mode === 'full'
-                ? `${BASE_URL}/sentiment_full.json`
+            : mode === 'extended'
+                ? `${BASE_URL}/sentiment_extended.json`
                 : `${BASE_URL}/sentiment_weekly/sentiment_${resolvedWeek}.json`
 
         fetch(url)

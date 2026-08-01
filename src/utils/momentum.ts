@@ -1,6 +1,6 @@
 // Recent-rate vs baseline-rate activity ratio, computed backend-side for
 // both clusters (export_topics_json.py) and tickers (export_sentiment_json.py),
-// "full" mode only — "recent" mode's window IS the recent window, so there's
+// "extended" mode only — "recent" mode's window IS the recent window, so there's
 // no baseline to compare against.
 
 const MOMENTUM_SURGE_THRESHOLD = 1.75
