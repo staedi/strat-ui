@@ -25,6 +25,7 @@ export interface MacroOutcome {
     type: string
     latest_value: string
     latest_date: string
+    last_meeting_date?: string
     trend?: TrendPoint[]
     direction?: string | null
     source?: string

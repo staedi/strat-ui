@@ -16,14 +16,12 @@ function formatDate(iso: string): string {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function nextScheduled(type: string, schedule: ScheduleEntry[]): { date: string; pending: boolean } | null {
+function nextScheduled(type: string, schedule: ScheduleEntry[]): string | null {
     const today = new Date(); today.setHours(0, 0, 0, 0)
-    const sorted = schedule.filter(e => e.type === type).sort((a, b) => a.date.localeCompare(b.date))
-    const upcoming = sorted.find(e => new Date(e.date) >= today)
-    if (upcoming) return { date: upcoming.date, pending: false }
-    // No future entry — fall back to most recent past (data not yet ingested)
-    const past = [...sorted].reverse().find(e => new Date(e.date) < today)
-    return past ? { date: past.date, pending: true } : null
+    const match = schedule
+        .filter(e => e.type === type && new Date(e.date) >= today)
+        .sort((a, b) => a.date.localeCompare(b.date))[0]
+    return match ? match.date : null
 }
 
 type Direction = 'hike' | 'cut' | 'hold' | null
@@ -54,10 +52,10 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
     const showDown = isCB ? direction === 'cut' : trendDown
     const showHold = isCB && direction === 'hold'
 
-    const scheduledEntry = nextScheduled(o.type, schedule)
-    // Only treat as pending if the scheduled date is newer than our latest data
-    const isPending = scheduledEntry?.pending === true && (scheduledEntry.date > (o.latest_date ?? ''))
-    const scheduled = scheduledEntry ? formatDate(scheduledEntry.date) : null
+    // DELAYED: backend confirmed a more recent meeting than our latest data
+    const isPending = !!(o.last_meeting_date && o.last_meeting_date > (o.latest_date ?? ''))
+    const scheduledDate = isPending ? o.last_meeting_date! : nextScheduled(o.type, schedule)
+    const scheduled = scheduledDate ? formatDate(scheduledDate) : null
 
     const isRange = o.latest_value.includes('–')
     const rangeParts = isRange ? o.latest_value.split('–').map(s => s.trim()) : null
