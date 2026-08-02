@@ -46,28 +46,28 @@ Organized by the following sub-tabs.
 
 **Economic and Market Snapshots**
 
-<img width="1104" height="739" alt="briefing-overview" src="https://github.com/user-attachments/assets/dc8cd393-bca5-4d75-b127-02045cbe7491" />
+<img width="1106" height="754" alt="briefing-overview" src="https://github.com/user-attachments/assets/719ad552-81b6-4504-ba35-e65693ceb704" />
 
 **Market Movers**
 
-<img width="1100" height="406" alt="briefing-movers" src="https://github.com/user-attachments/assets/1e67f1ac-7477-444d-8e2c-72a7dbd5b05d" />
+<img width="1105" height="358" alt="briefing-mover" src="https://github.com/user-attachments/assets/725c0250-7f8b-45d3-8373-3cc162e97abb" />
 
 ### Topics
 
 #### Topic Clusters
 
-<img width="1107" height="758" alt="topics" src="https://github.com/user-attachments/assets/2f25859f-8d90-41af-8a25-a4dea4c0c636" />
+<img width="1107" height="760" alt="topics" src="https://github.com/user-attachments/assets/e573d762-0a06-4443-809f-22a285a8677d" />
 
 ### Tickers
 
 #### Ticker Overview
 
-<img width="1107" height="756" alt="tickers-overview" src="https://github.com/user-attachments/assets/a4634ac9-bbf4-4431-a6ea-df820277c8c0" />
+<img width="1109" height="760" alt="tickers-overview" src="https://github.com/user-attachments/assets/9a53963d-5d17-49ea-99e5-11f778009e77" />
 
 #### Ticker Profile
 
-<img width="1105" height="754" alt="tickers-profile" src="https://github.com/user-attachments/assets/aeb34a27-0fcf-4801-b979-1403c331e4cb" />
+<img width="1108" height="758" alt="tickers-profile" src="https://github.com/user-attachments/assets/1ca924ad-58b4-4692-ac55-f2ff175c1870" />
 
 #### Ticker Peer Comparison
 
-<img width="1107" height="759" alt="tickers-peer" src="https://github.com/user-attachments/assets/b25abf18-44d1-4f96-8a2f-6c3b74092d6c" />
+<img width="1106" height="759" alt="tickers-peer" src="https://github.com/user-attachments/assets/3d3acdc1-2695-4b0f-ac1b-e2d131babcc5" />
