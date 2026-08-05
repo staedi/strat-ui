@@ -54,7 +54,7 @@ export default function ScheduleStrip({ entries, recentDebuts = [], availableTic
                             <span style={{
                                 fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
                                 color: isToday ? 'white' : 'var(--ink-2)',
-                                fontFamily: e.ticker ? 'var(--font-ui)' : 'var(--font-ui)',
+                                fontFamily: 'var(--font-ui)',
                             }}>
                                 {e.ticker ?? TYPE_LABELS[e.type] ?? e.type.toUpperCase()}
                             </span>

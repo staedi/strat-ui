@@ -7,6 +7,8 @@ import { useSentimentData } from '../hooks/useSentimentData'
 import type { TickerSentiment, SentimentDay, SentimentCluster } from '../hooks/useSentimentData'
 import { useCompanyData } from '../hooks/useCompanyData'
 import type { CompanyMeta } from '../hooks/useCompanyData'
+import { useEarningsData } from '../hooks/useEarningsData'
+import type { EarningsEntry } from '../hooks/useEarningsData'
 import { momentumLabel } from '../utils/momentum'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -77,6 +79,12 @@ function fmtShort(iso?: string): string {
   if (!iso) return ''
   const d = new Date(iso)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function fmtMedium(iso?: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const AXIS_LABEL: React.CSSProperties = {
@@ -318,6 +326,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
   const { data: pricesData } = usePricesData(topicsMode)
   const { data: sentimentDataFull } = useSentimentData(topicsMode)
   const { data: companyData } = useCompanyData()
+  const { data: earningsData } = useEarningsData()
   const [selected, setSelected] = useState<string | null>(initialTicker ?? null)
   const [sort, setSort] = useState<'count' | 'alpha'>('count')
   const [search, setSearch] = useState('')
@@ -485,6 +494,8 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
             pricesUpdatedAt={pricesData?.updated_at}
             topicsUpdatedAt={data?.updated_at}
             companyMeta={companyData?.companies[selectedTicker.ticker] ?? null}
+            earningsEntries={earningsData?.earnings[selectedTicker.ticker] ?? null}
+            earningsUpdatedAt={earningsData?.updated_at}
             allPricesData={pricesData?.prices ?? {}}
             allSentimentData={sentimentDataFull?.tickers ?? {}}
             onClusterClick={onClusterClick}
@@ -507,6 +518,8 @@ function TickerDetail({
   pricesUpdatedAt,
   topicsUpdatedAt,
   companyMeta,
+  earningsEntries,
+  earningsUpdatedAt,
   allPricesData,
   allSentimentData,
   onClusterClick,
@@ -520,6 +533,8 @@ function TickerDetail({
   pricesUpdatedAt?: string
   topicsUpdatedAt?: string
   companyMeta: CompanyMeta | null
+  earningsEntries: EarningsEntry[] | null
+  earningsUpdatedAt?: string
   allPricesData: Record<string, PricePoint[]>
   allSentimentData: Record<string, TickerSentiment>
   onClusterClick: (clusterId: number) => void
@@ -611,6 +626,11 @@ function TickerDetail({
             </div>
           )}
 
+          {/* Earnings */}
+          {earningsEntries && earningsEntries.length > 0 && (
+            <EarningsSection entries={earningsEntries} updatedAt={earningsUpdatedAt} />
+          )}
+
           {/* Sentiment */}
           {sentimentData && <SentimentChart sentiment={sentimentData} windowStart={sentimentWindowStart} updatedAt={sentimentUpdatedAt} />}
 
@@ -657,6 +677,99 @@ function TickerDetail({
           />
         )}
       </div>
+    </div>
+  )
+}
+
+// ── Earnings section ──────────────────────────────────────────────────────────
+
+function quarterLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  return `Q${Math.ceil((d.getMonth() + 1) / 3)} ${d.getFullYear()}`
+}
+
+function EarningsSection({ entries, updatedAt }: { entries: EarningsEntry[]; updatedAt?: string }) {
+  const upcoming = entries.filter(e => e.eps_actual === null)
+  const reported = entries.filter(e => e.eps_actual !== null)
+
+  if (upcoming.length === 0 && reported.length === 0) return null
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Earnings</span></p>
+        {updatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(updatedAt)}</span>}
+      </div>
+
+      {/* Next earnings — inline stat row, matches Price/Sentiment pattern */}
+      {upcoming.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: reported.length > 0 ? 10 : 0 }}>
+          <p style={SECTION_LABEL}>Next</p>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-ui)' }}>
+            {fmtMedium(upcoming[0].date)}
+          </span>
+          {upcoming[0].eps_estimate !== null && (
+            <span style={SECTION_STATS}>
+              est. EPS ${upcoming[0].eps_estimate.toFixed(2)}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Historical quarters table */}
+      {reported.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {/* Header */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '56px 1fr 80px 80px 72px 52px',
+            gap: 8, padding: '4px 10px',
+          }}>
+            {['Quarter', 'Date', 'Estimate', 'Actual', 'Surprise', ''].map((h, i) => (
+              <span key={i} style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>{h}</span>
+            ))}
+          </div>
+          {reported.map((e, i) => {
+            const beat = e.surprise_pct !== null && e.surprise_pct > 0
+            const miss = e.surprise_pct !== null && e.surprise_pct < 0
+            const surpriseColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-4)'
+            return (
+              <div key={i} style={{
+                display: 'grid',
+                gridTemplateColumns: '56px 1fr 80px 80px 72px 52px',
+                gap: 8, padding: '7px 10px', borderRadius: 4,
+                background: i % 2 === 0 ? 'var(--ink-7)' : 'transparent',
+                alignItems: 'center',
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)' }}>
+                  {quarterLabel(e.date)}
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
+                  {fmtShort(e.date)}
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                  {e.eps_estimate !== null ? `$${e.eps_estimate.toFixed(2)}` : '—'}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                  {e.eps_actual !== null ? `$${e.eps_actual.toFixed(2)}` : '—'}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: surpriseColor, fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                  {e.surprise_pct !== null ? `${beat ? '+' : ''}${e.surprise_pct.toFixed(1)}%` : '—'}
+                </span>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+                  textTransform: 'uppercase', padding: '2px 6px', borderRadius: 10,
+                  background: beat ? '#5ec98b22' : miss ? '#e06c7522' : 'transparent',
+                  color: surpriseColor, fontFamily: 'var(--font-ui)',
+                  textAlign: 'center',
+                }}>
+                  {beat ? 'Beat' : miss ? 'Miss' : e.surprise_pct !== null ? 'In-line' : ''}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
