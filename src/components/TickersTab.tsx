@@ -614,9 +614,8 @@ function TickerDetail({
           {/* Price + Volume — side by side on desktop, stacked on mobile */}
           {pricePoints.length > 1 && (
             <div style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ marginBottom: 10 }}>
                 <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Price · Volume</span></p>
-                {pricesUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(pricesUpdatedAt)}</span>}
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 280px', minWidth: 0 }}>
@@ -635,9 +634,8 @@ function TickerDetail({
           {/* Context clusters */}
           {clustersWithSummary.length > 0 && (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ marginBottom: 10 }}>
                 <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Context</span></p>
-                {topicsUpdatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(topicsUpdatedAt)}</span>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                 {clustersWithSummary.map(c => (
@@ -679,12 +677,18 @@ function TickerDetail({
             {earningsEntries && earningsEntries.some(e => e.eps_actual !== null) && (
               <EarningsHistory
                 entries={earningsEntries}
-                updatedAt={earningsUpdatedAt}
                 showDivider={!!companyMeta}
               />
             )}
           </div>
         )}
+
+        <DataFooter
+          pricesUpdatedAt={pricesUpdatedAt}
+          sentimentUpdatedAt={sentimentUpdatedAt}
+          topicsUpdatedAt={topicsUpdatedAt}
+          earningsUpdatedAt={earningsUpdatedAt}
+        />
       </div>
     </div>
   )
@@ -781,7 +785,7 @@ function EarningsStrip({ entries }: { entries: EarningsEntry[] }) {
 }
 
 // Full historical table in Profile tab.
-function EarningsHistory({ entries, updatedAt, showDivider }: { entries: EarningsEntry[]; updatedAt?: string; showDivider?: boolean }) {
+function EarningsHistory({ entries, showDivider }: { entries: EarningsEntry[]; showDivider?: boolean }) {
   const reported = entries.filter(e => e.eps_actual !== null)
   if (reported.length === 0) return null
 
@@ -790,13 +794,12 @@ function EarningsHistory({ entries, updatedAt, showDivider }: { entries: Earning
       paddingTop: showDivider ? 16 : 0,
       borderTop: showDivider ? '1px solid var(--ink-6)' : 'none',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <div style={{ marginBottom: 10 }}>
         <p style={{ ...SECTION_LABEL, fontSize: 11 }}>EPS History</p>
-        {updatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(updatedAt)}</span>}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 80px 80px 72px 52px', gap: 8, padding: '4px 10px' }}>
-          {['Quarter', 'Date', 'Estimate', 'Actual', 'Surprise', ''].map((h, i) => (
+        <div style={{ display: 'grid', gridTemplateColumns: '64px 56px 80px 80px 76px', gap: 8, padding: '4px 10px' }}>
+          {['Quarter', 'Date', 'Estimate', 'Actual', 'Surprise'].map((h, i) => (
             <span key={i} style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>{h}</span>
           ))}
         </div>
@@ -806,7 +809,7 @@ function EarningsHistory({ entries, updatedAt, showDivider }: { entries: Earning
           const surpriseColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-4)'
           return (
             <div key={i} style={{
-              display: 'grid', gridTemplateColumns: '56px 1fr 80px 80px 72px 52px',
+              display: 'grid', gridTemplateColumns: '64px 56px 80px 80px 76px',
               gap: 8, padding: '7px 10px', borderRadius: 4,
               background: i % 2 === 0 ? 'var(--ink-7)' : 'transparent',
               alignItems: 'center',
@@ -820,15 +823,9 @@ function EarningsHistory({ entries, updatedAt, showDivider }: { entries: Earning
                 {e.eps_actual !== null ? `$${e.eps_actual.toFixed(2)}` : '—'}
               </span>
               <span style={{ fontSize: 11, fontWeight: 600, color: surpriseColor, fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
-                {e.surprise_pct !== null ? `${beat ? '+' : ''}${e.surprise_pct.toFixed(1)}%` : '—'}
-              </span>
-              <span style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
-                padding: '2px 6px', borderRadius: 10, textAlign: 'center',
-                background: beat ? '#5ec98b22' : miss ? '#e06c7522' : 'transparent',
-                color: surpriseColor, fontFamily: 'var(--font-ui)',
-              }}>
-                {beat ? 'Beat' : miss ? 'Miss' : e.surprise_pct !== null ? 'In-line' : ''}
+                {e.surprise_pct !== null
+                  ? `${beat ? '+' : ''}${e.surprise_pct.toFixed(1)}% ${beat ? 'Beat' : miss ? 'Miss' : ''}`
+                  : '—'}
               </span>
             </div>
           )
@@ -890,9 +887,8 @@ function SentimentChart({ sentiment, windowStart, updatedAt }: { sentiment: Tick
   return (
     <div style={{ marginBottom: 20 }}>
       {/* Section label row — matches Price · Volume style */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+      <div style={{ marginBottom: 6 }}>
         <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Sentiment</span></p>
-        {updatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(updatedAt)}</span>}
       </div>
       {/* Stats row — SENTIMENT label + pct + label + mentions, matches Price/Volume pattern */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -1436,6 +1432,37 @@ function CompanySection({
         </div>
       )}
 
+    </div>
+  )
+}
+
+// ── Data sources footer ───────────────────────────────────────────────────────
+
+function DataFooter({ pricesUpdatedAt, sentimentUpdatedAt, topicsUpdatedAt, earningsUpdatedAt }: {
+  pricesUpdatedAt?: string
+  sentimentUpdatedAt?: string
+  topicsUpdatedAt?: string
+  earningsUpdatedAt?: string
+}) {
+  const items = [
+    pricesUpdatedAt    && { label: 'Prices',    date: pricesUpdatedAt },
+    sentimentUpdatedAt && { label: 'Sentiment', date: sentimentUpdatedAt },
+    topicsUpdatedAt    && { label: 'Topics',    date: topicsUpdatedAt },
+    earningsUpdatedAt  && { label: 'Earnings',  date: earningsUpdatedAt },
+  ].filter((x): x is { label: string; date: string } => !!x)
+
+  if (items.length === 0) return null
+
+  return (
+    <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid var(--ink-7)' }}>
+      <p style={{ fontSize: 11, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)', margin: 0, fontStyle: 'italic' }}>
+        {items.map((item, i) => (
+          <span key={item.label}>
+            {i > 0 && <span style={{ margin: '0 5px', opacity: 0.5 }}>·</span>}
+            {item.label} {fmtMedium(item.date)}
+          </span>
+        ))}
+      </p>
     </div>
   )
 }
