@@ -608,6 +608,9 @@ function TickerDetail({
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '16px 24px' }}>
 
         {tab === 'overview' && (<>
+          {/* Earnings strip — upcoming date + latest result, sits at top like schedule strip */}
+          {earningsEntries && <EarningsStrip entries={earningsEntries} />}
+
           {/* Price + Volume — side by side on desktop, stacked on mobile */}
           {pricePoints.length > 1 && (
             <div style={{ marginBottom: 20 }}>
@@ -624,11 +627,6 @@ function TickerDetail({
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Earnings */}
-          {earningsEntries && earningsEntries.length > 0 && (
-            <EarningsSection entries={earningsEntries} updatedAt={earningsUpdatedAt} />
           )}
 
           {/* Sentiment */}
@@ -667,109 +665,175 @@ function TickerDetail({
           )}
         </>)}
 
-        {tab === 'profile' && companyMeta && (
-          <CompanySection
-            meta={companyMeta}
-            ticker={ticker}
-            allPricesData={allPricesData}
-            allSentimentData={allSentimentData}
-            isMobile={isMobile}
-          />
+        {tab === 'profile' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {companyMeta && (
+              <CompanySection
+                meta={companyMeta}
+                ticker={ticker}
+                allPricesData={allPricesData}
+                allSentimentData={allSentimentData}
+                isMobile={isMobile}
+              />
+            )}
+            {earningsEntries && earningsEntries.some(e => e.eps_actual !== null) && (
+              <EarningsHistory
+                entries={earningsEntries}
+                updatedAt={earningsUpdatedAt}
+                showDivider={!!companyMeta}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
   )
 }
 
-// ── Earnings section ──────────────────────────────────────────────────────────
+// ── Earnings ──────────────────────────────────────────────────────────────────
 
 function quarterLabel(dateStr: string): string {
   const d = new Date(dateStr)
   return `Q${Math.ceil((d.getMonth() + 1) / 3)} ${d.getFullYear()}`
 }
 
-function EarningsSection({ entries, updatedAt }: { entries: EarningsEntry[]; updatedAt?: string }) {
+function daysFromToday(iso: string): number {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const target = new Date(iso); target.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86400000)
+}
+
+// Compact strip at the top of Overview — upcoming date pill + latest reported chip.
+// Only renders when there's something time-sensitive (upcoming, or just-reported ≤7d).
+function EarningsStrip({ entries }: { entries: EarningsEntry[] }) {
   const upcoming = entries.filter(e => e.eps_actual === null)
   const reported = entries.filter(e => e.eps_actual !== null)
+  const latest = reported[0] ?? null
+  const latestIsRecent = latest !== null && daysFromToday(latest.date) >= -7
 
-  if (upcoming.length === 0 && reported.length === 0) return null
+  if (upcoming.length === 0 && !latestIsRecent) return null
 
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div style={{ marginBottom: 16 }}>
+      <p style={{
+        fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+        textTransform: 'uppercase', color: 'var(--ink-4)',
+        margin: '0 0 8px', fontFamily: 'var(--font-ui)',
+      }}>
+        Earnings
+      </p>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {upcoming.map((e, i) => {
+          const days = daysFromToday(e.date)
+          const isToday = days === 0
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '4px 9px', borderRadius: 20,
+              background: isToday ? 'var(--highlight)' : 'var(--ink-7)',
+            }}>
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                color: isToday ? 'white' : 'var(--ink-2)', fontFamily: 'var(--font-ui)',
+              }}>
+                EPS
+              </span>
+              <span style={{
+                fontSize: 11, fontFamily: 'var(--font-ui)',
+                color: isToday ? 'rgba(255,255,255,0.75)' : 'var(--ink-4)',
+              }}>
+                {isToday ? 'Today' : days === 1 ? 'Tomorrow' : fmtMedium(e.date)}
+                {e.eps_estimate !== null && ` · est. $${e.eps_estimate.toFixed(2)}`}
+              </span>
+            </div>
+          )
+        })}
+
+        {latestIsRecent && latest && (() => {
+          const beat = latest.surprise_pct !== null && latest.surprise_pct > 0
+          const miss = latest.surprise_pct !== null && latest.surprise_pct < 0
+          const surpriseColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-4)'
+          return (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '4px 9px', borderRadius: 20,
+              background: 'transparent',
+              border: `1px solid ${beat ? '#5ec98b44' : miss ? '#e06c7544' : 'var(--ink-5)'}`,
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: 'var(--ink-2)', fontFamily: 'var(--font-ui)' }}>
+                {quarterLabel(latest.date)}
+              </span>
+              {latest.surprise_pct !== null ? (
+                <span style={{ fontSize: 11, fontWeight: 600, color: surpriseColor, fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                  {beat ? 'Beat' : miss ? 'Miss' : 'In-line'} {beat ? '+' : ''}{latest.surprise_pct.toFixed(1)}%
+                </span>
+              ) : (
+                <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
+                  EPS ${latest.eps_actual?.toFixed(2)}
+                </span>
+              )}
+            </div>
+          )
+        })()}
+      </div>
+    </div>
+  )
+}
+
+// Full historical table in Profile tab.
+function EarningsHistory({ entries, updatedAt, showDivider }: { entries: EarningsEntry[]; updatedAt?: string; showDivider?: boolean }) {
+  const reported = entries.filter(e => e.eps_actual !== null)
+  if (reported.length === 0) return null
+
+  return (
+    <div style={{
+      paddingTop: showDivider ? 16 : 0,
+      borderTop: showDivider ? '1px solid var(--ink-6)' : 'none',
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <p style={SECTION_LABEL}><span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Earnings</span></p>
+        <p style={{ ...SECTION_LABEL, fontSize: 11 }}>EPS History</p>
         {updatedAt && <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>Updated {fmtDate(updatedAt)}</span>}
       </div>
-
-      {/* Next earnings — inline stat row, matches Price/Sentiment pattern */}
-      {upcoming.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: reported.length > 0 ? 10 : 0 }}>
-          <p style={SECTION_LABEL}>Next</p>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-ui)' }}>
-            {fmtMedium(upcoming[0].date)}
-          </span>
-          {upcoming[0].eps_estimate !== null && (
-            <span style={SECTION_STATS}>
-              est. EPS ${upcoming[0].eps_estimate.toFixed(2)}
-            </span>
-          )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr 80px 80px 72px 52px', gap: 8, padding: '4px 10px' }}>
+          {['Quarter', 'Date', 'Estimate', 'Actual', 'Surprise', ''].map((h, i) => (
+            <span key={i} style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>{h}</span>
+          ))}
         </div>
-      )}
-
-      {/* Historical quarters table */}
-      {reported.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {/* Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '56px 1fr 80px 80px 72px 52px',
-            gap: 8, padding: '4px 10px',
-          }}>
-            {['Quarter', 'Date', 'Estimate', 'Actual', 'Surprise', ''].map((h, i) => (
-              <span key={i} style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>{h}</span>
-            ))}
-          </div>
-          {reported.map((e, i) => {
-            const beat = e.surprise_pct !== null && e.surprise_pct > 0
-            const miss = e.surprise_pct !== null && e.surprise_pct < 0
-            const surpriseColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-4)'
-            return (
-              <div key={i} style={{
-                display: 'grid',
-                gridTemplateColumns: '56px 1fr 80px 80px 72px 52px',
-                gap: 8, padding: '7px 10px', borderRadius: 4,
-                background: i % 2 === 0 ? 'var(--ink-7)' : 'transparent',
-                alignItems: 'center',
+        {reported.map((e, i) => {
+          const beat = e.surprise_pct !== null && e.surprise_pct > 0
+          const miss = e.surprise_pct !== null && e.surprise_pct < 0
+          const surpriseColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-4)'
+          return (
+            <div key={i} style={{
+              display: 'grid', gridTemplateColumns: '56px 1fr 80px 80px 72px 52px',
+              gap: 8, padding: '7px 10px', borderRadius: 4,
+              background: i % 2 === 0 ? 'var(--ink-7)' : 'transparent',
+              alignItems: 'center',
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)' }}>{quarterLabel(e.date)}</span>
+              <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>{fmtShort(e.date)}</span>
+              <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                {e.eps_estimate !== null ? `$${e.eps_estimate.toFixed(2)}` : '—'}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                {e.eps_actual !== null ? `$${e.eps_actual.toFixed(2)}` : '—'}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: surpriseColor, fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
+                {e.surprise_pct !== null ? `${beat ? '+' : ''}${e.surprise_pct.toFixed(1)}%` : '—'}
+              </span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                padding: '2px 6px', borderRadius: 10, textAlign: 'center',
+                background: beat ? '#5ec98b22' : miss ? '#e06c7522' : 'transparent',
+                color: surpriseColor, fontFamily: 'var(--font-ui)',
               }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)' }}>
-                  {quarterLabel(e.date)}
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
-                  {fmtShort(e.date)}
-                </span>
-                <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
-                  {e.eps_estimate !== null ? `$${e.eps_estimate.toFixed(2)}` : '—'}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
-                  {e.eps_actual !== null ? `$${e.eps_actual.toFixed(2)}` : '—'}
-                </span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: surpriseColor, fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
-                  {e.surprise_pct !== null ? `${beat ? '+' : ''}${e.surprise_pct.toFixed(1)}%` : '—'}
-                </span>
-                <span style={{
-                  fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
-                  textTransform: 'uppercase', padding: '2px 6px', borderRadius: 10,
-                  background: beat ? '#5ec98b22' : miss ? '#e06c7522' : 'transparent',
-                  color: surpriseColor, fontFamily: 'var(--font-ui)',
-                  textAlign: 'center',
-                }}>
-                  {beat ? 'Beat' : miss ? 'Miss' : e.surprise_pct !== null ? 'In-line' : ''}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
+                {beat ? 'Beat' : miss ? 'Miss' : e.surprise_pct !== null ? 'In-line' : ''}
+              </span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
