@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import TabFooter from './TabFooter'
 import { useBriefingData } from '../hooks/useBriefingData'
 import { useTopicsData } from '../hooks/useTopicsData'
 import { aggregateTickers } from './TickersTab'
@@ -223,31 +224,8 @@ export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Pro
             </div>
 
             {/* Footer */}
-            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <p style={{
-                    fontSize: 11, color: 'var(--ink-4)',
-                    fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,
-                }}>
-                    Topic clusters reflect the past 7 days. Market data and sentiment updated daily.
-                </p>
-                <p style={{
-                    fontSize: 11, color: 'var(--ink-4)',
-                    fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,
-                }}>
-                    Macro indicators sourced from FRED and respective central banks (FED, ECB, BOJ, and BOE).
-                </p>
-                <p style={{
-                    fontSize: 11, color: 'var(--ink-4)',
-                    fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,
-                }}>
-                    Price and earnings data via yfinance.
-                </p>
-                <p style={{
-                    fontSize: 11, color: 'var(--ink-4)',
-                    fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,
-                }}>
-                    Summaries and topic labels are AI-generated and may contain errors.
-                </p>
+            <div style={{ marginTop: 8 }}>
+                <TabFooter showMacro />
             </div>
 
         </div>

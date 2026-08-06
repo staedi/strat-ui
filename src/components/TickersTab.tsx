@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import TabFooter from './TabFooter'
 import type { TopicsData, ClusterNode, MetaCategoryNode } from './CirclePacking'
 import { useTopicsData } from '../hooks/useTopicsData'
 import { usePricesData } from '../hooks/usePricesData'
@@ -1482,7 +1483,7 @@ function DataFooter({ pricesUpdatedAt, sentimentUpdatedAt, topicsUpdatedAt, earn
 
   return (
     <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid var(--ink-7)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <p style={{ fontSize: 11, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)', margin: 0, fontStyle: 'italic' }}>
+      <p style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)', margin: 0, fontStyle: 'italic' }}>
         Updated: {items.map((item, i) => (
           <span key={item.label}>
             {i > 0 && <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span>}
@@ -1490,9 +1491,7 @@ function DataFooter({ pricesUpdatedAt, sentimentUpdatedAt, topicsUpdatedAt, earn
           </span>
         ))}
       </p>
-      <p style={{ fontSize: 11, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)', margin: 0, fontStyle: 'italic' }}>
-        Price and earnings data via yfinance. Sentiment and topic labels are AI-generated and may contain errors.
-      </p>
+      <TabFooter />
     </div>
   )
 }
