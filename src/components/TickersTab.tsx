@@ -596,15 +596,20 @@ function TickerDetail({
           </div>
         </div>
 
-        <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
-          Last updated: {items.map((item, i) => (
-            <span key={item.label}>
-              {i > 0 && <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span>}
-              {item.label} {fmtShort(item.date)}
-            </span>
-          ))}
-
-        </p>
+        {(() => {
+          const maxTs = items.reduce((a, b) => (a.date > b.date ? a : b)).date
+          const maxDate = new Date(maxTs)
+          return (
+            <>
+              <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
+                {maxDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+              <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
+                Last updated {maxDate.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })}
+              </p>
+            </>
+          )
+        })()}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginTop: 10 }}>
           <Stat label="Mentions" value={ticker.count} />
@@ -704,12 +709,7 @@ function TickerDetail({
           </div>
         )}
 
-        <DataFooter
-          pricesUpdatedAt={pricesUpdatedAt}
-          sentimentUpdatedAt={sentimentUpdatedAt}
-          topicsUpdatedAt={topicsUpdatedAt}
-          earningsUpdatedAt={earningsUpdatedAt}
-        />
+        <DataFooter />
       </div>
     </div>
   )
@@ -1459,37 +1459,10 @@ function CompanySection({
 
 // ── Data sources footer ───────────────────────────────────────────────────────
 
-function DataFooter({ pricesUpdatedAt, sentimentUpdatedAt, topicsUpdatedAt, earningsUpdatedAt }: {
-  pricesUpdatedAt?: string
-  sentimentUpdatedAt?: string
-  topicsUpdatedAt?: string
-  earningsUpdatedAt?: string
-}) {
-  const timestamps = [pricesUpdatedAt, sentimentUpdatedAt, topicsUpdatedAt, earningsUpdatedAt]
-    .filter((t): t is string => !!t)
-  if (timestamps.length === 0) return null
-
-  const maxTs = timestamps.reduce((a, b) => (a > b ? a : b))
-  const maxDate = new Date(maxTs)
-
-  const longDate = maxDate.toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  })
-  const lastUpdated = maxDate.toLocaleString('en-US', {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
-  })
-
+function DataFooter() {
   return (
-    <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid var(--ink-7)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <p style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--font-ui)', margin: 0 }}>
-        {longDate}
-      </p>
-      <p style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)', margin: 0 }}>
-        Last updated {lastUpdated}
-      </p>
-      <div style={{ marginTop: 4 }}>
-        <TabFooter />
-      </div>
+    <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid var(--ink-7)' }}>
+      <TabFooter />
     </div>
   )
 }
