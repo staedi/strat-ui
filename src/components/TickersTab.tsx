@@ -600,14 +600,9 @@ function TickerDetail({
           const maxTs = items.reduce((a, b) => (a.date > b.date ? a : b)).date
           const maxDate = new Date(maxTs)
           return (
-            <>
-              <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
-                {maxDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-              </p>
-              <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
-                Last updated {maxDate.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })}
-              </p>
-            </>
+            <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 2, fontFamily: 'var(--font-ui)' }}>
+              Last updated {maxDate.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })}
+            </p>
           )
         })()}
 
