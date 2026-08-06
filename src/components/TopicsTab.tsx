@@ -88,38 +88,28 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* Sub-header: title block mirroring Briefing */}
+      {/* Sub-header: stats + last updated */}
       <div style={{
-        padding: '12px 20px 10px', borderBottom: '1px solid var(--ink-5)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '8px 20px', borderBottom: '1px solid var(--ink-5)',
         flexShrink: 0, background: 'var(--white)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <h2 style={{
-              fontSize: 18, fontWeight: 700, color: 'var(--ink)',
-              letterSpacing: '-0.02em', margin: 0, fontFamily: 'var(--font-ui)',
-            }}>
-              Topics
-            </h2>
-            {data?.updated_at && (
-              <p style={{ fontSize: 11, color: 'var(--ink-4)', margin: '2px 0 0', fontFamily: 'var(--font-ui)', fontStyle: 'italic' }}>
-                Last updated {fmtDate(data.updated_at)}
-              </p>
-            )}
-          </div>
-          {/* Stats — right side */}
-          <div style={{ display: 'flex', gap: 16, flexShrink: 0, paddingTop: 2 }}>
-            {stats ? (
-              <>
-                <StatItem value={stats.topics} label="Topics" />
-                <StatItem value={stats.clusters} label="Clusters" />
-                <StatItem value={stats.articles} label="Articles" />
-              </>
-            ) : (
-              <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>—</span>
-            )}
-          </div>
+        <div style={{ display: 'flex', gap: 20 }}>
+          {stats ? (
+            <>
+              <StatItem value={stats.topics} label="Topics" />
+              <StatItem value={stats.clusters} label="Clusters" />
+              <StatItem value={stats.articles} label="Articles" />
+            </>
+          ) : (
+            <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>—</span>
+          )}
         </div>
+        {data?.updated_at && (
+          <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
+            Last updated {fmtDate(data.updated_at)}
+          </span>
+        )}
       </div>
 
       {/* Viz area */}
