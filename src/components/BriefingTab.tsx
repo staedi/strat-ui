@@ -240,6 +240,12 @@ export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Pro
                     fontSize: 11, color: 'var(--ink-4)',
                     fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,
                 }}>
+                    Price and earnings data via yfinance.
+                </p>
+                <p style={{
+                    fontSize: 11, color: 'var(--ink-4)',
+                    fontStyle: 'italic', fontFamily: 'var(--font-ui)', margin: 0,
+                }}>
                     Summaries and topic labels are AI-generated and may contain errors.
                 </p>
             </div>

@@ -353,8 +353,34 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
 
   const selectedTicker = tickers.find(t => t.ticker === selected) ?? null
 
+  // Most-recent timestamp across all data sources for the tab-level header
+  const latestUpdatedAt = [
+    pricesData?.updated_at,
+    sentimentDataFull?.updated_at,
+    data?.updated_at,
+    earningsData?.updated_at,
+  ].filter((x): x is string => !!x).sort().pop()
+
   return (
-    <div style={{ display: 'flex', height: '100%', fontFamily: 'var(--font-ui)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'var(--font-ui)' }}>
+
+      {/* Tab-level header — mirrors Topics/Briefing slim bar */}
+      <div style={{
+        display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+        padding: '8px 16px', borderBottom: '1px solid var(--ink-5)',
+        flexShrink: 0, background: 'var(--white)', gap: 12,
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font-ui)', letterSpacing: '-0.01em' }}>
+          Tickers
+        </span>
+        {latestUpdatedAt && (
+          <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)', fontStyle: 'italic' }}>
+            Last updated {fmtDate(latestUpdatedAt)}
+          </span>
+        )}
+      </div>
+
+    <div style={{ display: 'flex', flex: 1, overflow: 'hidden', fontFamily: 'var(--font-ui)' }}>
 
       {/* Left: ticker list */}
       <div style={{
@@ -502,6 +528,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
           />
         )}
       </div>
+    </div>
     </div>
   )
 }
@@ -1454,14 +1481,17 @@ function DataFooter({ pricesUpdatedAt, sentimentUpdatedAt, topicsUpdatedAt, earn
   if (items.length === 0) return null
 
   return (
-    <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid var(--ink-7)' }}>
+    <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid var(--ink-7)', display: 'flex', flexDirection: 'column', gap: 4 }}>
       <p style={{ fontSize: 11, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)', margin: 0, fontStyle: 'italic' }}>
-        {items.map((item, i) => (
+        Updated: {items.map((item, i) => (
           <span key={item.label}>
-            {i > 0 && <span style={{ margin: '0 5px', opacity: 0.5 }}>·</span>}
-            {item.label} {fmtMedium(item.date)}
+            {i > 0 && <span style={{ margin: '0 4px', opacity: 0.5 }}>·</span>}
+            {item.label} {fmtShort(item.date)}
           </span>
         ))}
+      </p>
+      <p style={{ fontSize: 11, color: 'var(--ink-5)', fontFamily: 'var(--font-ui)', margin: 0, fontStyle: 'italic' }}>
+        Price and earnings data via yfinance. Sentiment and topic labels are AI-generated and may contain errors.
       </p>
     </div>
   )
