@@ -686,20 +686,19 @@ function TickerDetail({
 
         {tab === 'profile' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {companyMeta && (
+            {companyMeta ? (
               <CompanySection
                 meta={companyMeta}
                 ticker={ticker}
                 allPricesData={allPricesData}
                 allSentimentData={allSentimentData}
                 isMobile={isMobile}
+                earningsEntries={earningsEntries}
               />
-            )}
-            {earningsEntries && earningsEntries.some(e => e.eps_actual !== null) && (
-              <EarningsHistory
-                entries={earningsEntries}
-                showDivider={!!companyMeta}
-              />
+            ) : (
+              earningsEntries && earningsEntries.some(e => e.eps_actual !== null) && (
+                <EarningsHistory entries={earningsEntries} isMobile={isMobile} />
+              )
             )}
           </div>
         )}
@@ -801,21 +800,80 @@ function EarningsStrip({ entries }: { entries: EarningsEntry[] }) {
 }
 
 // Full historical table in Profile tab.
-function EarningsHistory({ entries, showDivider }: { entries: EarningsEntry[]; showDivider?: boolean }) {
+function EarningsBarChart({ reported }: { reported: EarningsEntry[] }) {
+  const W = 300, H = 80, PAD = { top: 8, bottom: 20, left: 4, right: 4 }
+  const n = reported.length
+  if (n === 0) return null
+
+  const vals = reported.flatMap(e => [e.eps_estimate ?? 0, e.eps_actual ?? 0])
+  const minV = Math.min(0, ...vals)
+  const maxV = Math.max(...vals)
+  const range = maxV - minV || 1
+  const chartH = H - PAD.top - PAD.bottom
+  const chartW = W - PAD.left - PAD.right
+
+  const slotW = chartW / n
+  const barW = slotW * 0.28
+  const gap = slotW * 0.06
+  const zeroY = PAD.top + chartH * (1 - (0 - minV) / range)
+
+  const toY = (v: number) => PAD.top + chartH * (1 - (v - minV) / range)
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
+      {/* zero line */}
+      <line x1={PAD.left} y1={zeroY} x2={W - PAD.right} y2={zeroY}
+        stroke="var(--ink-5)" strokeWidth={0.5} strokeDasharray="2 2" />
+
+      {reported.map((e, i) => {
+        const beat = e.surprise_pct !== null && e.surprise_pct > 0
+        const miss = e.surprise_pct !== null && e.surprise_pct < 0
+        const actualColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-3)'
+        const cx = PAD.left + slotW * i + slotW / 2
+
+        const estX = cx - gap / 2 - barW
+        const actX = cx + gap / 2
+
+        const estV = e.eps_estimate ?? 0
+        const actV = e.eps_actual ?? 0
+
+        const estY = toY(Math.max(estV, 0))
+        const estH = Math.abs(toY(estV) - zeroY)
+        const actY = toY(Math.max(actV, 0))
+        const actH = Math.abs(toY(actV) - zeroY)
+
+        const labelY = H - 2
+
+        return (
+          <g key={i}>
+            {e.eps_estimate !== null && (
+              <rect x={estX} y={estY} width={barW} height={Math.max(estH, 1)}
+                fill="var(--ink-5)" opacity={0.5} rx={1} />
+            )}
+            <rect x={actX} y={actY} width={barW} height={Math.max(actH, 1)}
+              fill={actualColor} rx={1} />
+            <text x={cx} y={labelY} textAnchor="middle"
+              fontSize={7} fill="var(--ink-4)" fontFamily="var(--font-ui)">
+              {quarterLabel(e.date)}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function EarningsHistory({ entries, showDivider, isMobile }: { entries: EarningsEntry[]; showDivider?: boolean; isMobile?: boolean }) {
   const reported = entries.filter(e => e.eps_actual !== null)
   if (reported.length === 0) return null
 
-  return (
-    <div style={{
-      paddingTop: showDivider ? 16 : 0,
-      borderTop: showDivider ? '1px solid var(--ink-6)' : 'none',
-    }}>
-      <div style={{ marginBottom: 10 }}>
-        <p style={{ ...SECTION_LABEL, fontSize: 11 }}>EPS History</p>
-      </div>
+  const makeTable = (showSurprise: boolean) => {
+    const cols = showSurprise ? '60px 52px 68px 68px 60px' : '64px 56px 80px 80px'
+    const headers = showSurprise ? ['Quarter', 'Date', 'Est', 'Actual', 'Surprise'] : ['Quarter', 'Date', 'Est', 'Actual']
+    return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '64px 56px 80px 80px 76px', gap: 8, padding: '4px 10px' }}>
-          {['Quarter', 'Date', 'Estimate', 'Actual', 'Surprise'].map((h, i) => (
+        <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 6, padding: '4px 8px' }}>
+          {headers.map((h, i) => (
             <span key={i} style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--ink-5)', fontFamily: 'var(--font-ui)' }}>{h}</span>
           ))}
         </div>
@@ -825,8 +883,8 @@ function EarningsHistory({ entries, showDivider }: { entries: EarningsEntry[]; s
           const surpriseColor = beat ? '#5ec98b' : miss ? '#e06c75' : 'var(--ink-4)'
           return (
             <div key={i} style={{
-              display: 'grid', gridTemplateColumns: '64px 56px 80px 80px 76px',
-              gap: 8, padding: '7px 10px', borderRadius: 4,
+              display: 'grid', gridTemplateColumns: cols,
+              gap: 6, padding: '6px 8px', borderRadius: 4,
               background: i % 2 === 0 ? 'var(--ink-7)' : 'transparent',
               alignItems: 'center',
             }}>
@@ -838,15 +896,46 @@ function EarningsHistory({ entries, showDivider }: { entries: EarningsEntry[]; s
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink)', fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
                 {e.eps_actual !== null ? `$${e.eps_actual.toFixed(2)}` : '—'}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: surpriseColor, fontFamily: 'var(--font-ui)', fontVariantNumeric: 'tabular-nums' }}>
-                {e.surprise_pct !== null
-                  ? `${beat ? '+' : ''}${e.surprise_pct.toFixed(1)}% ${beat ? 'Beat' : miss ? 'Miss' : ''}`
-                  : '—'}
-              </span>
+              {showSurprise && (e.surprise_pct !== null ? (
+                <span style={{
+                  fontSize: 9, fontWeight: 600, padding: '2px 5px', borderRadius: 3,
+                  background: beat ? 'rgba(94,201,139,0.15)' : miss ? 'rgba(224,108,117,0.15)' : 'var(--ink-6)',
+                  color: surpriseColor, letterSpacing: '0.04em',
+                  fontFamily: 'var(--font-ui)', display: 'inline-block', width: 'fit-content',
+                }}>
+                  {beat ? 'BEAT' : miss ? 'MISS' : 'IN-LINE'}
+                </span>
+              ) : <span style={{ color: 'var(--ink-5)', fontSize: 11 }}>—</span>)}
             </div>
           )
         })}
       </div>
+    )
+  }
+
+  return (
+    <div style={{
+      paddingTop: showDivider ? 16 : 0,
+      borderTop: showDivider ? '1px solid var(--ink-6)' : 'none',
+    }}>
+      <div style={{ marginBottom: 10 }}>
+        <p style={{ ...SECTION_LABEL, fontSize: 11 }}>EPS History</p>
+      </div>
+      {isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <EarningsBarChart reported={reported} />
+          {makeTable(false)}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <EarningsBarChart reported={reported} />
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            {makeTable(true)}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1262,12 +1351,14 @@ function CompanySection({
   allPricesData,
   allSentimentData,
   isMobile = false,
+  earningsEntries,
 }: {
   meta: CompanyMeta
   ticker: AggregatedTicker
   allPricesData: Record<string, PricePoint[]>
   allSentimentData: Record<string, TickerSentiment>
   isMobile?: boolean
+  earningsEntries?: EarningsEntry[] | null
 }) {
   const {
     summary, news_role,
@@ -1373,6 +1464,11 @@ function CompanySection({
             {news_role}
           </p>
         </div>
+      )}
+
+      {/* EPS History */}
+      {earningsEntries && earningsEntries.some(e => e.eps_actual !== null) && (
+        <EarningsHistory entries={earningsEntries} isMobile={isMobile} />
       )}
 
       {/* Peers section */}
