@@ -38,7 +38,7 @@ News are classified and presented in the form of topic clusters. For each cluste
 
 Organized by the following sub-tabs.
 - Overview: Each ticker's basic charts (i.e., prices and volumes) and news analysis (clusters)
-- Profile: Summary of each ticker (i.e., company profile and market positioning) with its comparison to relevant peers
+- Profile: Summary of each ticker (i.e., company profile, market positioning, and earning i.e., EPS history) with its comparison to relevant peers
  
 ## Examples
 
