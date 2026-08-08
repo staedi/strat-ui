@@ -20,7 +20,7 @@ interface Props {
 function fmtDate(iso?: string): string {
   if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZoneName: 'short' })
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
 }
 
 export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeChange }: Props) {

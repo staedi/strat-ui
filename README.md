@@ -50,7 +50,7 @@ Organized by the following sub-tabs.
 
 **Market Movers**
 
-![briefing-mover](images/briefing-mover.png)
+![briefing-mover](images/briefing-movers.png)
 
 ### Topics
 
@@ -70,4 +70,4 @@ Organized by the following sub-tabs.
 
 #### Ticker Peer Comparison
 
-![tickers-peer](images/tickers-peer.png)
+![tickers-peer](images/tickers-peers.png)
