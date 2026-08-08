@@ -59,7 +59,7 @@ function MacroRow({ o, schedule, isMobile }: { o: MacroOutcome; schedule: Schedu
 
     const isRange = o.latest_value.includes('–')
     const rangeParts = isRange ? o.latest_value.split('–').map(s => s.trim()) : null
-    const match = !isRange ? o.latest_value.match(/^([\d,.$]+(?:\.\d+)?%?)(.*)?$/) : null
+    const match = !isRange ? o.latest_value.match(/^(-?[\d,.$]+(?:\.\d+)?%?[kKmMbBtT]?)(.*)?$/) : null
     const valueNum = isRange ? '' : (match?.[1] ?? o.latest_value)
     const valueUnit = isRange ? '' : (match?.[2]?.trim() ?? '')
 
