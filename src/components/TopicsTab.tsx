@@ -17,21 +17,29 @@ interface Props {
 
 // ── Shared chart helpers ─────────────────────────────────────────────────────
 
-function fmtDate(iso?: string): string {
+function fmtDate(iso?: string, full = false): string {
   if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
+  if (full) return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeChange }: Props) {
   const { data, loading, error } = useTopicsData(mode)
   const { data: sentimentData } = useSentimentData(mode)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   const [activeCluster, setActiveCluster] = useState<number | null>(initialCluster ?? null)
   const [activeMeta, setActiveMeta] = useState<string | null>(null)
   const [selectedCluster, setSelectedCluster] = useState<ClusterNode | null>(null)
   const [selectedMeta, setSelectedMeta] = useState<MetaCategoryNode | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -107,7 +115,7 @@ export default function TopicsTab({ onTickerClick, initialCluster, mode, onModeC
         </div>
         {data?.updated_at && (
           <span style={{ fontSize: 11, color: 'var(--ink-4)', fontFamily: 'var(--font-ui)' }}>
-            Last updated {fmtDate(data.updated_at)}
+            Last updated {fmtDate(data.updated_at, !isMobile)}
           </span>
         )}
       </div>
