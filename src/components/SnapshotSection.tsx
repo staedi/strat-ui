@@ -68,6 +68,13 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
         (max, i) => Math.max(max, freshnessValue(i)),
         freshnessValue(filtered[0]),
     )
+    // Needed to gate intraday staleness: only flag an item if it shares the
+    // same trading session (as_of) as the freshest peer — different as_of
+    // means different markets/sessions, not a problem worth surfacing.
+    const freshestAsOf = filtered.reduce(
+        (max, i) => i.as_of > max ? i.as_of : max,
+        filtered[0].as_of,
+    )
 
     return (
         <div style={{
@@ -86,7 +93,11 @@ function AssetRow({ items, label, shaded }: { items: SnapshotItem[]; label: stri
             </span>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'baseline' }}>
                 {filtered.map(item => {
-                    const isStale = freshnessValue(item) < freshest
+                    // Only flag intraday staleness: same session (as_of matches the freshest
+                    // peer) but fetched less recently. Different as_of means different trading
+                    // sessions (e.g. APAC live vs US not yet open) — the data is correct for
+                    // each market, so no badge.
+                    const isStale = item.as_of === freshestAsOf && freshnessValue(item) < freshest
                     return (
                         <div key={item.ticker} style={{
                             display: 'flex', alignItems: 'baseline', gap: 4

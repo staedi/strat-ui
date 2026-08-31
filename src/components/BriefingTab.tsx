@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import TabFooter from './TabFooter'
 import { useBriefingData } from '../hooks/useBriefingData'
 import { useTopicsData } from '../hooks/useTopicsData'
+import { useSentimentData } from '../hooks/useSentimentData'
 import { aggregateTickers } from './TickersTab'
 import SnapshotSection from './SnapshotSection'
 import MacroTable from './MacroTable'
@@ -126,13 +127,19 @@ interface Props {
 export default function BriefingTab({ onTickerClick, onClusterClick, mode }: Props) {
     const { data, loading, error } = useBriefingData()
     // Ground truth for "does this ticker have a Tickers-tab page": the same
-    // aggregation TickersTab itself uses (related_tickers across topics_{mode}.json
-    // clusters) — not briefing.json's own by_news/by_price lists, which are
-    // independently-generated and can disagree with it.
+    // aggregation TickersTab itself uses — related_tickers across
+    // topics_{mode}.json clusters, PLUS sentiment-only tickers (real
+    // MIN_MENTIONS-cleared coverage whose articles landed in HDBSCAN's -1
+    // "noise" cluster and so never got a topic node — see project history:
+    // GILD). Still independent from briefing.json's own by_news/by_price
+    // lists, which can include tickers this set doesn't cover (e.g. a pure
+    // price mover with no news/sentiment presence at all) — those remain
+    // correctly non-clickable.
     const { data: topicsData } = useTopicsData(mode)
+    const { data: sentimentDataFull } = useSentimentData(mode)
     const availableTickers = useMemo(
-        () => new Set(topicsData ? aggregateTickers(topicsData).map(t => t.ticker) : []),
-        [topicsData]
+        () => new Set(topicsData ? aggregateTickers(topicsData, sentimentDataFull?.tickers).map(t => t.ticker) : []),
+        [topicsData, sentimentDataFull]
     )
 
     if (loading) {

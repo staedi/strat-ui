@@ -38,7 +38,25 @@ function clusterColor(id: number) { return PALETTE[id % PALETTE.length] }
 
 // ── Aggregation ───────────────────────────────────────────────────────────────
 
-export function aggregateTickers(data: TopicsData): AggregatedTicker[] {
+// sentimentTickers is optional and, when passed, seeds entries for tickers
+// that have real sentiment coverage but zero topic clusters — e.g. a
+// standalone story (an FDA approval, a lawsuit ruling) whose 2-3 articles
+// didn't have enough topically-similar neighbors to form/join an HDBSCAN
+// cluster and got assigned to the -1 "noise" cluster, which never gets
+// exported as a topic node. Those tickers are real, MIN_MENTIONS-cleared
+// signal (see export_sentiment_json.py) — they were previously invisible
+// to both this list and Briefing's clickability gate (which is built from
+// this same function's output), even though Briefing's own "By Sentiment"
+// list is sourced independently from sentiment_recent.json and would show
+// them as seemingly-clickable list items with no page to land on. See
+// project history: GILD (Gilead) — 18 real sentiment sentences (HIV drug
+// approval, a patent lawsuit ruling) across 3 articles, all landed in
+// cluster -1, so GILD had zero related_tickers hits despite clearing the
+// sentiment threshold.
+export function aggregateTickers(
+  data: TopicsData,
+  sentimentTickers?: Record<string, { name: string; total: number }>,
+): AggregatedTicker[] {
   const map = new Map<string, AggregatedTicker>()
 
   for (const meta of data.children) {
@@ -61,6 +79,14 @@ export function aggregateTickers(data: TopicsData): AggregatedTicker[] {
             context: cluster.ticker_context?.[t.ticker],
           })
         }
+      }
+    }
+  }
+
+  if (sentimentTickers) {
+    for (const [ticker, s] of Object.entries(sentimentTickers)) {
+      if (!map.has(ticker)) {
+        map.set(ticker, { ticker, name: s.name, count: s.total, clusters: [] })
       }
     }
   }
@@ -341,7 +367,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
 
   const tickers = useMemo(() => {
     if (!data) return []
-    const all = aggregateTickers(data)
+    const all = aggregateTickers(data, sentimentDataFull?.tickers)
     const filtered = search
       ? all.filter(t =>
         t.ticker.toLowerCase().includes(search.toLowerCase()) ||
@@ -350,7 +376,7 @@ export default function TickersTab({ initialTicker, onClusterClick, mode = 'rece
     return sort === 'alpha'
       ? [...filtered].sort((a, b) => a.ticker.localeCompare(b.ticker))
       : filtered
-  }, [data, sort, search])
+  }, [data, sentimentDataFull, sort, search])
 
   const selectedTicker = tickers.find(t => t.ticker === selected) ?? null
 
